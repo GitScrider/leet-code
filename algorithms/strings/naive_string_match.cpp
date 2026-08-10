@@ -25,6 +25,41 @@
  *   Smarter algorithms cut the worst case to O(n + m) by never re-scanning
  *   text characters they have already examined.
  *
+ * Complexity derivation (nested-loop comparison count):
+ *   Let n = |T|, m = |P|, and count character COMPARISONS. The outer loop runs
+ *   over the (n - m + 1) alignments i = 0, 1, ..., n-m. At alignment i the inner
+ *   while-loop makes c_i comparisons before it hits a mismatch or consumes all m
+ *   characters, with 1 <= c_i <= m. The total is:
+ *
+ *       C(n, m) = SUM_{i=0}^{n-m} c_i
+ *
+ *   WORST case (e.g. T = "aa...a", P = "aa...ab"): every alignment matches the
+ *   m-1 leading chars before failing, so c_i = m for all (n - m + 1) alignments:
+ *
+ *       C_worst = SUM_{i=0}^{n-m} m = m * (n - m + 1) = O(n * m)
+ *
+ *   (the product peaks at ~n^2/4 when m ~ n/2). BEST / typical case (mismatch on
+ *   the FIRST compared char at every alignment) gives c_i = 1:
+ *
+ *       C_best = SUM_{i=0}^{n-m} 1 = n - m + 1 = O(n)
+ *
+ *   Nothing is remembered across alignments (the text pointer effectively moves
+ *   backward after each mismatch), which is exactly why the worst case is O(n*m).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The cost is DATA-DEPENDENT, so bounds are given per case:
+ *     WORST  C = m*(n-m+1): take g = m*(n-m+1), c1=c2=1 => Theta(n*m)  (tight).
+ *     BEST   C = n-m+1:     => Theta(n - m + 1) = Theta(n) for m << n   (tight).
+ *   Over ALL inputs the running time is O(n*m) (upper, from worst) and
+ *   Omega(n - m + 1) = Omega(n) (lower, from best); it is NOT a single Theta
+ *   because best != worst -- hence the per-case table. The comparison-sort floor
+ *   Omega(n log n) is irrelevant: this is exact substring search, not sorting;
+ *   the only universal floor is Omega(n), just to read the text.
+ *
  * Key points:
  *   - No preprocessing; simplest possible correct matcher.
  *   - Advancing the window by 1 makes overlapping matches fall out for free.

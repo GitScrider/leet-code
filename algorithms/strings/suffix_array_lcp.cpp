@@ -27,6 +27,57 @@
  *   | Space               | O(n)                | O(n)                    |
  *   +---------------------+---------------------+-------------------------+
  *
+ * Complexity derivation (SA: rounds x comparison sort; LCP: amortized h-carry):
+ *   SUFFIX ARRAY (prefix doubling). Round 0 assigns rank = first character in
+ *   O(n). Each doubling round r (k = 2^r, r = 0, 1, 2, ...) performs:
+ *       - one std::sort of n indices with an O(1) pair comparator -> c1*n*log2 n
+ *       - one linear re-rank pass over the n suffixes             -> c2*n
+ *   A round distinguishes suffixes by their first 2^(r+1) characters, so the loop
+ *   stops once 2^(r+1) >= n, i.e. after R = ceil(log2 n) rounds (fewer if all ranks
+ *   become distinct earlier). Summing the per-round cost over the R rounds:
+ *
+ *       T_SA(n) = SUM_{r=0}^{R-1} (c1*n*log2 n + c2*n)
+ *               = R * (c1*n*log2 n + c2*n)
+ *               = ceil(log2 n) * (c1*n*log2 n + c2*n)
+ *               = O(log n * n log n) = O(n log^2 n)
+ *
+ *   The extra log factor over an ideal O(n log n) suffix array is exactly the
+ *   R = log n rounds, each paying the comparison sort's own log n. (Radix-sorting
+ *   the (rank[i], rank[i+k]) pairs per round would drop each sort to O(n) and give
+ *   the O(n log n) build.)
+ *
+ *   LCP (Kasai), amortized. The outer loop runs n times. The carry variable h is
+ *   incremented once per matched character in the while loop and decremented by at
+ *   most 1 per outer iteration (the "next suffix keeps h-1" step). Since h >= 0
+ *   always, starts at 0, and ends <= n:
+ *
+ *       (total increments) = (total decrements) + (final h)
+ *                          <= n                 + n         = 2n
+ *
+ *   So the while body runs <= 2n times over the WHOLE run, not per i. Adding the
+ *   O(n) inverse-rank pass and the n outer iterations:
+ *
+ *       T_LCP(n) = n (inverse rank) + n (outer loop) + 2n (matches) = O(n)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   SUFFIX ARRAY is data-dependent in the ROUND COUNT R:
+ *     WORST case (periodic / few distinct chars, e.g. "aaaa"): R = ceil(log2 n)
+ *       rounds, each an n log n sort  =>  Theta(n log^2 n) (tight).
+ *     BEST case (all ranks distinct after one doubling, e.g. all-distinct chars):
+ *       R = 1 round, but still one full std::sort  =>  Theta(n log n) (tight).
+ *     Over ALL inputs: O(n log^2 n) (from worst) and Omega(n log n) (from best);
+ *     it is not a single Theta because best != worst. The Omega(n log n) here is
+ *     the COMPARISON-SORT lower bound paid every round; it is NOT a lower bound for
+ *     the suffix-array PROBLEM -- SA-IS / DC3 build in O(n) via radix (non-
+ *     comparison) sorting, so n log^2 n reflects THIS method only.
+ *   LCP (Kasai) is order-invariant: the amortized count obeys 2n <= f(n) <= 4n, so
+ *     with g(n) = n it is squeezed both sides (c1 = 2, c2 = 4, n0 = 1) =>
+ *     Theta(n) for best = average = worst.
+ *
  * Key points:
  *   - Doubling reuses previous ranks: comparing 2^(k+1)-prefixes costs O(1) via
  *     the (rank[i], rank[i+2^k]) pair -- no character re-scanning.

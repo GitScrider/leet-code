@@ -24,6 +24,53 @@
  *   3^(n/3) is optimal in the worst case: it matches the maximum possible
  *   number of maximal cliques in an n-vertex graph (Moon-Moser bound).
  *
+ * Complexity derivation (subset scan / branching recurrence):
+ *   (1) Brute force. The outer loop runs over all masks = 0 .. 2^n - 1; for each,
+ *       isClique(mask) scans the set bits of mask (at most n) doing O(1) bitmask
+ *       work each, so O(n) per mask:
+ *
+ *           C(n) = SUM_{mask=0}^{2^n - 1} O(n) = 2^n * O(n) = O(2^n * n).
+ *
+ *   (2) Bron-Kerbosch with pivoting. Let T(n) count recursive calls on a graph
+ *       whose candidate set P U X has n vertices. Pivoting branches only on
+ *       P \ N(pivot); the worst case is the Moon-Moser graph -- a disjoint union
+ *       of n/3 triangles -- where every group of 3 vertices splits the search
+ *       three ways while removing 3 vertices:
+ *
+ *           T(n) = 3 * T(n-3),      T(0) = T(1) = T(2) = O(1)   (base case)
+ *
+ *       Unfold the recursion tree:
+ *
+ *           level d      #nodes      size each        (3 branches, -3 size/level)
+ *           ---------    --------    -------------
+ *           d = 0        1           n
+ *           d = 1        3           n-3
+ *           d = 2        9           n-6
+ *           d = k        3^k         n-3k
+ *
+ *       There are n/3 levels (size drops by 3 until 0), so
+ *
+ *           T(n) = 3^(n/3) * O(1) = (3^(1/3))^n ~= 1.4422^n = O(3^(n/3)).
+ *
+ *       This equals the Moon-Moser maximum number of maximal cliques, so the
+ *       bound is optimal. Per node the pivot loop does O(n) 32-bit popcount/AND
+ *       operations, giving O(n * 3^(n/3)); the table drops the polynomial factor
+ *       (soft-O) and reports O(3^(n/3)).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Brute force visits all 2^n masks regardless of input => Theta(2^n * n) (tight).
+ *   Bron-Kerbosch is data-dependent: best case (e.g. a complete graph K_n) has one
+ *   maximal clique and branches on a single vertex per level => Omega(n^2); worst
+ *   case (n/3 disjoint triangles) => O(3^(n/3)). Overall the running time is
+ *   O(3^(n/3)) (worst) and Omega(n) (must at least read the graph), not a single
+ *   Theta, because the number of maximal cliques depends on the instance.
+ *   The comparison-sort bound Omega(n log n) is irrelevant (no comparison sort);
+ *   the governing lower bound is the conjectured exponential hardness under P != NP.
+ *
  * Key points:
  *   - Bron-Kerbosch enumerates all MAXIMAL cliques via sets R (current clique),
  *     P (candidates that extend R), X (already-explored vertices).

@@ -33,6 +33,44 @@
  *   within (1 - epsilon) * ln n -- the ln n inapproximability barrier
  *   (Dinur-Steurer). So greedy is, up to constants, the best we can do fast.
  *
+ * Complexity derivation (exact = subset enumeration; greedy = bit counting):
+ *   EXACT solver. The outer loop runs over every sub-family, encoded as a
+ *   bitmask `choice` in [0, 2^m). For each of the 2^m candidates the inner loop
+ *   scans all m bit positions, OR-ing precomputed element-masks in O(1) each:
+ *
+ *       C_exact(m) = SUM_{choice=0}^{2^m - 1} ( m )   (inner: m constant-time ORs)
+ *                  = m * 2^m
+ *                  = O(2^m * m)
+ *
+ *   There is no early exit -- the loop always visits all 2^m masks -- so this
+ *   count is exact, not merely an upper bound.
+ *
+ *   GREEDY heuristic. Each while-iteration marks one more set `used`, and every
+ *   productive iteration adds >= 1 fresh element, so the loop runs at most
+ *   min(m, n) <= n times. Each iteration scans all m sets; per set the popcount
+ *   loop `for (b = fresh; b; b &= b-1)` clears one set bit per step and, because
+ *   masks are 32-bit with n <= 32, costs at most 32 = O(1) steps:
+ *
+ *       C_greedy = SUM_{iter=1}^{<= n} ( m * O(1) ) = O(n * m) = O(m * n)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g   for input size >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f          for input size >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   EXACT: the enumeration is INPUT-INDEPENDENT (always 2^m masks, m work each),
+ *     so c1*(m*2^m) <= C_exact <= c2*(m*2^m)  =>  Theta(2^m * m); best = worst.
+ *   GREEDY is data-dependent:
+ *     BEST case   one set already covers U: a single iteration scanning m sets
+ *                 =>  Theta(m).
+ *     WORST case  coverage grows one element at a time: min(m, n) iterations
+ *                 =>  O(m * n).
+ *     So greedy is O(m*n) overall (upper) and Omega(m) (lower), not one Theta.
+ *   The Omega(n log n) comparison-sort bound does NOT apply: neither solver
+ *   sorts or compares keys -- exact does exhaustive bitmask enumeration, greedy
+ *   does bit counting. The exponential 2^m is inherent to exact set cover unless
+ *   P = NP; greedy trades optimality for the polynomial H(n)-approximation.
+ *
  * Key points:
  *   - Elements-covered are tracked as a bitmask over std::uint32_t: bit i set
  *     means element i is covered. "Full universe" is the mask (1<<n) - 1.

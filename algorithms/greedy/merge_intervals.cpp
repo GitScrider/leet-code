@@ -34,6 +34,38 @@
  *   +----------------------+---------------------+
  *   Everything is dominated by the initial sort.
  *
+ * Complexity derivation (sort then linear sweep; per-operation counts):
+ *   Let n = number of intervals.
+ *   MERGE. Sorting by start is a comparison sort => O(n log n) (log n levels of
+ *   n work, as in merge sort). The sweep then does one pass i = 1..n-1, each
+ *   iteration O(1) (one compare, then extend-end or push-back):
+ *       C_merge = SUM_{i=1}^{n-1} O(1) = (n-1) = O(n).
+ *   Total = O(n log n) + O(n) = O(n log n)  (sort dominates).
+ *   INSERT (input already sorted & disjoint). Three consecutive while-loops
+ *   TOGETHER advance the single index i from 0 to n exactly once -- every
+ *   interval is handled by exactly one loop -- so
+ *       C_insert = SUM_{i=0}^{n-1} O(1) = n = O(n),  with no sort at all.
+ *   MIN ROOMS. Copy starts/ends O(n), sort BOTH arrays 2*O(n log n)=O(n log n).
+ *   The two-pointer sweep runs while s < n; each iteration increments exactly
+ *   one of s or e, and s reaches n in n steps while e advances at most n times:
+ *       C_sweep = SUM_{iterations} O(1) <= (n + n)*O(1) = 2n = O(n).
+ *   Total = O(n log n) (the two sorts dominate).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   MERGE / MIN-ROOMS: f(n) = c1*n log n + c2*n. With g = n log n:
+ *     upper  O:     f(n) <= c*(n log n)   for n >= n0  => O(n log n)
+ *     lower  Omega: the sort of the n starts needs Omega(n log n) comparisons
+ *                   (decision-tree bound) and runs on every input => Omega(n log n)
+ *     tight  Theta: both  => Theta(n log n); data-independent, best=avg=worst.
+ *   The comparison-sort Omega(n log n) applies: merging is at least as hard as
+ *   sorting (sorted order is required to detect every overlap in one sweep), so
+ *   no hashing trick beats it. INSERT works on PRE-SORTED input and never sorts:
+ *   f(n) = c*n exactly, every interval visited once => Theta(n) (best=worst).
+ *
  * Key points:
  *   - Sort key: START ascending for merging; ties do not affect correctness, but
  *     touching intervals [1,2],[2,3] ARE merged here (change <= to < for

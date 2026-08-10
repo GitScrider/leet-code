@@ -21,8 +21,52 @@
  *   | Method                  | Time                       | Result          |
  *   +-------------------------+----------------------------+-----------------+
  *   | Brute force (reference) | O(2^n * n)                 | EXACT maximum   |
- *   | Branch & bound          | O(1.38^n) worst, faster    | EXACT maximum   |
+ *   | Branch & bound          | O(2^n) worst case          | EXACT maximum   |
  *   +-------------------------+----------------------------+-----------------+
+ *
+ * Complexity derivation (subset scan / branching recurrence):
+ *   (1) Brute force. The outer loop runs over all masks = 0 .. 2^n - 1; for each,
+ *       isIndependent(mask) scans the set bits (at most n), O(1) each, so O(n) per
+ *       mask:
+ *
+ *           C(n) = SUM_{mask=0}^{2^n - 1} O(n) = 2^n * O(n) = O(2^n * n).
+ *
+ *   (2) Branch & bound (as IMPLEMENTED here). Branch on the LOWEST-index available
+ *       vertex v; let d = number of v's still-available neighbours:
+ *         EXCLUDE v -> delete only v                 -> subproblem of size n - 1
+ *         INCLUDE v -> delete v and its d neighbours  -> subproblem of size n-1-d
+ *       giving the recurrence
+ *
+ *           T(n) = T(n-1) + T(n-1-d) + O(1),     T(<=0) = O(1)   (base case)
+ *                    ^EXCLUDE   ^INCLUDE
+ *
+ *       The worst case is driven by the SMALLEST d. If a vertex is isolated (d = 0),
+ *       INCLUDE also removes just one vertex, so T(n) = 2*T(n-1) = O(2^n). A perfect
+ *       matching (d = 1 everywhere) gives T(n) = T(n-1) + T(n-2), the Fibonacci
+ *       recurrence, = O(phi^n) with phi ~= 1.618. Hence this simple lowest-index
+ *       branching is O(2^n) in the worst case; the optimistic cut
+ *       (chosen + available <= best) prunes many branches in practice but provides
+ *       no sub-2^n GUARANTEE.
+ *
+ *       NOTE: state-of-the-art MIS solvers instead branch on a MAX-degree vertex and
+ *       apply degree-1/2 "folding" reductions; a measure-and-conquer analysis then
+ *       yields O(1.22^n)..O(1.38^n). That refinement is NOT implemented here -- this
+ *       teaching version keeps the plain two-way branch, honestly bounded by O(2^n).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Brute force visits all 2^n masks regardless of input => Theta(2^n * n) (tight).
+ *   Branch & bound is data-dependent: best case (edgeless graph) takes every vertex
+ *   on the first descent, sets best = n, and the optimistic cut then prunes all
+ *   sibling branches => Omega(n); worst case O(2^n) (e.g. isolated vertices, where
+ *   neither branch shrinks the problem by more than one). Overall it is O(2^n)
+ *   (worst) and Omega(n) (best), not a single Theta, because the optimistic bound
+ *   makes the cost input-dependent. The comparison-sort lower bound Omega(n log n) does not
+ *   apply (this is not a comparison sort); the governing lower bound is the
+ *   conjectured exponential hardness of EXACT MIS under P != NP.
  *
  * Key points:
  *   - Branching rule on a vertex v: either INCLUDE v (then delete v and ALL its

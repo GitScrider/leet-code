@@ -28,6 +28,52 @@
  *   | Space               | O(m)                | O(1)                       |
  *   +---------------------+---------------------+----------------------------+
  *
+ * Complexity derivation (BFS build O(m); amortized KMP-style scan O(n + z)):
+ *   Let V be the number of trie nodes. Inserting the patterns creates at most one
+ *   node per pattern character, so V <= m + 1 = O(m), and the number of trie edges
+ *   is V - 1 = O(m).
+ *
+ *   BUILD (BFS). The BFS dequeues each node once and iterates its outgoing edges,
+ *   so the edge-iteration total over all nodes is (V - 1) = O(m). Computing
+ *   fail(v) walks the parent's failure chain; each while step moves to a STRICTLY
+ *   shallower node (fail always decreases trie depth), while a node's fail-depth
+ *   exceeds its parent's fail-depth by at most 1. This is the KMP potential
+ *   argument: summed over every node the while-step count telescopes to
+ *
+ *       SUM_{v} (steps to find fail(v)) <= SUM_{v} 1 = O(V) = O(m)
+ *
+ *   so BUILD = O(m) edge scans + O(m) fail-walk = O(m). (unordered_map find is
+ *   O(1) average, so this is O(m) EXPECTED; a collision-heavy alphabet degrades
+ *   each lookup toward O(degree).)
+ *
+ *   SEARCH. The outer loop runs n = |text| times, in two amortized parts:
+ *     (a) transitions: the inner while follows failure links. Each position adds
+ *         at most 1 to the current depth (a single forward edge step), so depth
+ *         rises by <= n in total; each while iteration drops depth by >= 1, hence
+ *             SUM_{i=0}^{n-1} (fail steps at i) <= n  = O(n).
+ *     (b) reporting: the output-link chain visits ONLY pattern-ending nodes (after
+ *         cur's own single visit), and every such node emits >= 1 match, so
+ *             SUM_{i=0}^{n-1} (chain work at i) = O(n + z),   z = # matches.
+ *   Total SEARCH = O(n) + O(n + z) = O(n + z).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f <= c2*g(n)  for input size >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f        for input size >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   BUILD: work is proportional to the trie size, c1*m <= f(m) <= c2*m, so it is
+ *     Theta(m) -- input-independent given the pattern set (best = worst).
+ *   SEARCH is OUTPUT-SENSITIVE, so cost splits into scan and reporting:
+ *     BEST case  (no pattern occurs, z = 0): exactly n transitions => Theta(n).
+ *     WORST case (dense overlaps, e.g. patterns a, aa, ..., a^k on text a^n):
+ *       z reaches Theta(n*k) and dominates => Theta(n + z).
+ *     Hence SEARCH = O(n + z) (upper) and Omega(n) (lower, the one mandatory scan);
+ *     it is Theta(n + z) only once z is counted as an input parameter, NOT a single
+ *     Theta(n), because z is unbounded in n alone.
+ *   This is pattern matching, NOT sorting, so the comparison-sort Omega(n log n)
+ *   lower bound does NOT apply: the automaton reads each text symbol O(1) times
+ *   amortized, beating the O(n*m) naive per-pattern re-scan.
+ *
  * Key points:
  *   - One text scan finds all patterns at once; failure links replace restarts.
  *   - Output links make reporting O(1) per actual match, so total is O(n + z).

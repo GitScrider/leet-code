@@ -33,6 +33,55 @@
  *   +--------------------------+------------------------------------------------+
  *   No polynomial exact algorithm is known (and none exists unless P = NP).
  *
+ * Complexity derivation (backtracking state-space tree):
+ *   Fix k. colorFrom() extends a partial coloring one vertex at a time, so the
+ *   search is a tree of depth V with branching factor k (up to k color choices
+ *   per vertex). Count the nodes level by level:
+ *
+ *       level d      #nodes (<=)     meaning
+ *       ---------    -----------     ------------------------------------------
+ *       d = 0        1               root: nothing colored yet
+ *       d = 1        k               vertex 0 assigned one of k colors
+ *       d = 2        k^2             vertices 0,1 assigned
+ *       ...          ...             ...
+ *       d = V        k^V             all V vertices assigned (a leaf coloring)
+ *
+ *   Total nodes explored, worst case (no pruning), is a geometric series:
+ *
+ *       N(V) = SUM_{d=0}^{V} k^d = (k^(V+1) - 1) / (k - 1) = Theta(k^V)   (k >= 2)
+ *
+ *   Work per node: the color loop tries up to k colors, each calling isSafe(),
+ *   which scans all V vertices -> O(k*V) per node. Hence
+ *
+ *       T(V) = Theta(k^V) * O(k*V) = O(k^V * poly(V))  ->  O(k^V)
+ *
+ *   dropping polynomial factors, which matches the table. The symmetry break
+ *   (fix vertex 0 to color 1) removes the top branching, saving a factor of k
+ *   (effectively k^(V-1) leaves); isSafe() pruning discards conflicting prefixes
+ *   so the explored tree is far smaller in practice, but the worst case stays
+ *   Theta(k^V). chromaticNumber() tries k = 1, 2, ..., chi in turn:
+ *
+ *       SUM_{k=1}^{chi} O(k^V) = O(chi * chi^V),
+ *
+ *   whose exponential growth is governed by the final term chi^V (with
+ *   chi <= 1 + maxDegree <= V) -- i.e. dominated by the last, successful k.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(V) <= c2*g(V)  for V >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(V) <= f(V)        for V >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The cost is DATA-DEPENDENT (pruning), so bounds are per case for fixed k:
+ *     WORST case  no proper coloring / heavy backtracking: the tree fills out to
+ *                 Theta(k^V) nodes  =>  time Theta(k^V) (times poly(V)).
+ *     BEST case   the first color tried works for every vertex (e.g. an edgeless
+ *                 graph): V nodes, one isSafe() of O(V) each  =>  Theta(V^2).
+ *   Over all inputs the running time is therefore O(k^V) (upper, from the worst
+ *   case) and Omega(V^2) (lower, from the best case) -- NOT a single Theta,
+ *   which is exactly why pruning helps yet cannot beat the exponential worst
+ *   case unless P = NP. The Omega(n log n) comparison-sort bound is irrelevant
+ *   here: no sorting happens; the hardness is combinatorial search, not ordering.
+ *
  * Key points:
  *   - The pruning heart is isSafe: a color is legal only if no already-colored
  *     neighbour uses it -- reject early instead of coloring the whole graph.

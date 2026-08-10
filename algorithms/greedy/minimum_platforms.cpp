@@ -33,6 +33,41 @@
  *   +--------------------------+----------------+
  *   Dominated by the two sorts.
  *
+ * Complexity derivation (two comparison-sorts + linear two-pointer sweep):
+ *   Let n = number of trains (arr.size() == dep.size()). The work has two parts.
+ *     (a) Two INDEPENDENT sorts, each of n integer keys by comparison. One
+ *         comparison sort costs c_s * n * log2 n key comparisons, so the pair
+ *         costs
+ *             S(n) = 2 * (c_s * n * log2 n) = 2 c_s * n log2 n.
+ *     (b) The two-pointer sweep. The while loop runs while i < n; every iteration
+ *         does O(1) work and advances EXACTLY ONE pointer: ++i on an arrival, ++j
+ *         on a departure. i climbs 0 -> n (those n increments are what end the
+ *         loop) and j increments k times with 0 <= k <= n (j never overtakes i).
+ *         So the iteration count is
+ *             W(n) = (#++i) + (#++j) = n + k <= 2n,
+ *         giving  W(n) = SUM over sweep steps of O(1) = Theta(n).
+ *   Adding the parts:
+ *       C(n) = S(n) + W(n) = 2 c_s * n log2 n + Theta(n) = O(n log n).
+ *   The linear sweep is a lower-order term; the two sorts dominate, matching the
+ *   "Dominated by the two sorts" note above.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Exact count f(n) = 2 c_s * n log2 n + c_w * n. Take g(n) = n log n:
+ *     upper  O:     f(n) <= (2 c_s + c_w) * (n log2 n)  for n >= 2 => O(n log n)
+ *     lower  Omega: f(n) >= 2 c_s * (n log2 n)          for n >= 2 => Omega(n log n)
+ *     tight  Theta: both hold                                      => Theta(n log n)
+ *   The cost is INPUT-INDEPENDENT: std::sort (introsort) is not adaptive and does
+ *   Theta(n log n) work on any ordering, and the sweep is always Theta(n). So
+ *   best == average == worst == Theta(n log n); no per-case split is needed.
+ *   Because the times are ordered with a COMPARISON sort, the decision-tree lower
+ *   bound Omega(n log n) applies and is unavoidable as written (a radix/counting
+ *   sort on bounded integer times could drop the sorts to O(n), leaving an O(n)
+ *   sweep-only variant -- but that is not what this code does).
+ *
  * Key points:
  *   - Sort key: times ascending, arrivals and departures in SEPARATE arrays.
  *   - Tie rule matters: `arrival <= departure` counts as still-occupied, so a

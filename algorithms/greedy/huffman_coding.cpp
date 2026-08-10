@@ -32,6 +32,50 @@
  *   +----------------------------+------------------+
  *   Total: O(n log n), dominated by the heap operations.
  *
+ * Complexity derivation (heap build + n-1 merges + DFS):
+ *   Let n be the number of distinct symbols and C(n) the total work.
+ *     Phase 1 -- populate the min-heap. The code inserts the n leaves one at a
+ *     time; insertion i sifts up through a heap of size i, costing O(log i), so
+ *     building by incremental pushes is
+ *         B(n) = SUM_{i=1}^{n} c*log2 i  <=  c*n*log2 n  =  O(n log n).
+ *     (A bottom-up heapify would be O(n) -- the table's figure -- but even the
+ *     slower incremental build cannot raise the total, since Phase 2 is already
+ *     O(n log n).)
+ *     Phase 2 -- the greedy merges. Each merge removes 2 nodes and adds 1, so
+ *     the loop runs exactly n-1 times. Merge j does two pops and one push on a
+ *     heap of size <= n, each a sift costing O(log n):
+ *         M(n) = SUM_{j=1}^{n-1} 3*c*log2 n = 3c*(n-1)*log2 n = O(n log n).
+ *     Phase 3 -- emit codes by DFS. The finished tree has n leaves and n-1
+ *     internal nodes = 2n-1 nodes; the walk visits each once with O(1) routing:
+ *         D(n) = SUM_{node} c1  =  c1*(2n-1)  =  O(n).
+ *   Adding the phases:
+ *         C(n) = O(n log n) + O(n log n) + O(n)  =  O(n log n),
+ *   dominated by the n-1 heap-driven merges, as the table states.
+ *   (Note: the separate totalBits tally re-looks-up each symbol's frequency by
+ *   a linear scan of `freqs`, an O(n^2) reporting convenience OUTSIDE the code
+ *   construction; a hash-map lookup restores the O(n log n) intrinsic to
+ *   Huffman. DFS string concatenations are likewise ignored, as is customary.)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The merge phase performs 3(n-1) = Theta(n) heap operations; for at least
+ *   the first n/2 merges the heap still holds Theta(n) nodes, so each min-
+ *   extraction sift costs up to Theta(log n) -> the merge phase is Omega(n log
+ *   n) as well as O(n log n) -> Theta(n log n); the O(n) build and DFS cannot
+ *   lower this. The frequency VALUES never remove the heap work, so with
+ *   g(n) = n log n:
+ *     upper  O:     C(n) <= c2 * (n log2 n)  for n >= 2  => O(n log n)
+ *     lower  Omega: C(n) >= c1 * (n log2 n)  for n >= 2  => Omega(n log n)
+ *     tight  Theta: both hold                            => Theta(n log n)
+ *   Best = average = worst = Theta(n log n): the cost is fixed by n alone, not
+ *   by the frequencies, so no per-case split is needed. This is a HEAP /
+ *   priority-queue bound, NOT a comparison-sort one -- the Omega(n log n)
+ *   sorting lower bound does not apply (the symbols are never fully sorted),
+ *   yet the per-operation log n heap cost yields the same order anyway.
+ *
  * Key points:
  *   - Min-heap ordered by frequency; a stable tie-break (insertion order)
  *     makes the tree deterministic. Ties never change the OPTIMAL total.

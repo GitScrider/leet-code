@@ -22,6 +22,46 @@
  *   +-----------------------------------+-------------------------+
  *   Space: O(1) for trial division, O(N) for the SPF sieve.
  *
+ * Complexity derivation (trial-division count / sieve harmonic sum / SPF chain):
+ *   Treat each 64-bit division or modulo as O(1) (word-RAM model).
+ *
+ *   (1) Trial division of n. The worst input is a PRIME n (nothing divides, so n
+ *       never shrinks). After the factor-2 loop the odd loop tests d = 3,5,7,...
+ *       while d*d <= n, i.e. d <= sqrt(n); the count of such candidates is
+ *           C(n) = SUM_{d = 3,5,...,<= sqrt(n)} 1
+ *                = #{ odd d : 3 <= d <= floor(sqrt n) }
+ *                = floor((floor(sqrt n) - 1) / 2)  ~  sqrt(n)/2  =  O(sqrt n),
+ *       each step one O(1) modulo. Any factor that IS found only shrinks n (and
+ *       thus sqrt n), so the prime case dominates.
+ *
+ *   (2) build_spf(N). For each prime i the inner loop stamps the multiples
+ *       i, 2i, 3i, ..., <= N (floor(N/i) of them); composite i costs an O(1)
+ *       test. Summing the inner work over primes:
+ *           T(N) = SUM_{p prime <= N} floor(N/p) <= N * SUM_{p prime <= N} 1/p
+ *                = N * (ln ln N + M + o(1))          (Mertens' 2nd theorem)
+ *                = O(N log log N),
+ *       plus O(N) for the outer scan  ->  O(N log log N) overall.
+ *
+ *   (3) factorize_spf(x). Each iteration divides out one prime spf[x] >= 2, so x
+ *       drops by a factor >= 2 per division. With x = PRODUCT p_i^e_i, p_i >= 2,
+ *       the number of divisions is SUM_i e_i <= log2(x) = O(log x).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Definitions: f = O(g) iff f <= c2*g; f = Omega(g) iff f >= c1*g; f = Theta(g)
+ *   iff both, for some positive c1, c2 and all n >= n0.
+ *   (1) Trial division is ADAPTIVE in n's arithmetic structure:
+ *       BEST  case n = 2^k: the factor-2 loop strips k = log2 n twos and the odd
+ *                  loop never runs (3*3 > 1)          =>  Theta(log n);
+ *       WORST case n prime: the odd loop runs to sqrt(n)  =>  Theta(sqrt n).
+ *       So over all n the time is O(sqrt n) (upper, prime) and Omega(log n)
+ *       (lower, power of two), not a single Theta.
+ *   (2) build_spf: the harmonic-over-primes sum is fixed by N, so with
+ *       g = N log log N, c1*g <= T(N) <= c2*g for N >= n0 => Theta(N log log N).
+ *   (3) factorize_spf: SUM_i e_i divisions, from Omega(1) (x prime -> 1 division)
+ *       up to O(log x) (x = 2^k -> log2 x divisions); the stated O(log x) is the
+ *       worst case. These are number-theoretic, not comparison sorts, so the
+ *       Omega(n log n) comparison lower bound does not apply.
+ *
  * Key points / assumptions:
  *   - Output is a list of (prime, exponent) pairs in increasing prime order.
  *   - n = 0 and n = 1 have no prime factors -> an empty list is returned.

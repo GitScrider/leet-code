@@ -31,6 +31,39 @@
  *   | Space     | O(m)          | the LPS array                           |
  *   +-----------+---------------+-----------------------------------------+
  *
+ * Complexity derivation (amortized potential argument):
+ *   PREPROCESS build_lps: the while-loop uses index i and prefix length len.
+ *   Each iteration is exactly one of:
+ *     (a) extend  : pattern[i]==pattern[len] -> i++, len++     (len rises by 1)
+ *     (b) fallback: mismatch, len>0 -> len = lps[len-1]        (len drops >= 1)
+ *     (c) restart : mismatch, len==0 -> lps[i]=0, i++          (len unchanged)
+ *   Use potential Phi = len >= 0. i strictly increases only in (a)+(c) and runs
+ *   1..m-1, so #(a)+#(c) = m-1. Only (a) raises Phi, by 1 each, so the total
+ *   rise <= m-1; since Phi stays >= 0 the total fall over (b) steps is <= the
+ *   rise, hence #(b) <= m-1. Iterations <= #(a)+#(b)+#(c) <= 2(m-1) = O(m).
+ *
+ *   SEARCH kmp_search: same accounting with text index i and match length j. i
+ *   increases on a match or a j==0 mismatch and runs 0..n, so those steps are
+ *   <= n; j rises by 1 only on a match (<= n times) and Phi = j >= 0, so the
+ *   fallback steps (j = lps[j-1], incl. after a full match) are <= n. Total
+ *   iterations <= 2n = O(n). Combining the two phases:
+ *
+ *       T(n, m) = O(m) [build_lps] + O(n) [scan] = O(n + m)
+ *
+ *   The text index i NEVER decreases -- that is the whole win over naive O(n*m).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The work is DATA-INDEPENDENT. build_lps always runs m-1 outer advances of i
+ *   => Theta(m); the scan must drive i from 0 to n => Omega(n), and amortization
+ *   caps it at O(n) => Theta(n). Hence total = Theta(n + m) with the SAME tight
+ *   bound for best, average and worst case (no per-case split needed); constants
+ *   c1=1, c2=2 per phase. The Omega(n log n) comparison-sort floor does not apply
+ *   -- this is a single linear scan, not sorting.
+ *
  * Key points:
  *   - The text index i is monotonically non-decreasing: no back-tracking.
  *   - LPS is built by matching the pattern against itself.

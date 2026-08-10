@@ -37,6 +37,45 @@
  *   Space: O(1) beyond the (sorted) input. The DP verifier below is O(amount*D)
  *   time and O(amount) space -- used only to expose the counterexample.
  *
+ * Complexity derivation (comparison-sort + single linear scan; D denominations):
+ *   Greedy path. Let D = number of denominations.
+ *     (a) Sort the D coins descending: a comparison sort costs
+ *             S(D) = c_s * D * log2 D   key comparisons.
+ *     (b) Greedy scan: ONE for loop over the D sorted coins. Each iteration does
+ *         O(1) work -- an integer division (count += remaining / coin) and a
+ *         modulo (remaining %= coin) -- so
+ *             G(D) = SUM_{k=0}^{D-1} O(1) = c_g * D = O(D).
+ *         Note the answer VALUE (number of coins used) does NOT enter the cost:
+ *         taking all copies of a coin at once via integer division keeps each of
+ *         the D denominations O(1), instead of an amount-many, one-coin-at-a-time
+ *         loop.
+ *   Total:
+ *       C(D) = S(D) + G(D) = c_s * D log2 D + c_g * D = O(D log D),
+ *   sort-dominated, matching the table.
+ *
+ *   DP verifier (coinChangeDP). Two nested loops: outer a = 1..amount (amount
+ *   iterations) times inner over D coins, each transition O(1):
+ *       C_dp = SUM_{a=1}^{amount} SUM_{coin} O(1) = amount * D * O(1)
+ *            = O(amount * D).
+ *   This is PSEUDO-POLYNOMIAL: polynomial in the numeric VALUE `amount`, not in
+ *   the input size log2(amount) bits. Space O(amount) for the dp[] table.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, D0 positive constants):
+ *     f(D) = O(g)      iff  EXISTS c2, D0 :       f(D) <= c2*g(D)  for D >= D0
+ *     f(D) = Omega(g)  iff  EXISTS c1, D0 :  c1*g(D) <= f(D)        for D >= D0
+ *     f(D) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Greedy exact count f(D) = c_s * D log2 D + c_g * D. Take g(D) = D log D:
+ *     upper  O:     f(D) <= (c_s + c_g) * (D log2 D)  for D >= 2 => O(D log D)
+ *     lower  Omega: f(D) >= c_s * (D log2 D)          for D >= 2 => Omega(D log D)
+ *     tight  Theta: both hold                                    => Theta(D log D)
+ *   The COMPARISON-sort decision-tree lower bound Omega(D log D) applies to
+ *   sorting the D denominations, so it dominates the O(D) scan and the greedy is
+ *   Theta(D log D) regardless of input order (introsort is not adaptive; the
+ *   scan's early break on remaining == 0 only trims a lower-order O(D) term). The
+ *   DP verifier does NO comparison sort, so that Omega(D log D) bound is
+ *   irrelevant to it; its cost is the tight, pseudo-polynomial Theta(amount * D).
+ *
  * Key points:
  *   - Sort denominations DESCENDING so "largest coin <= remaining" is the first
  *     that fits. We sort explicitly rather than assume input order.

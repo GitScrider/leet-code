@@ -35,6 +35,39 @@
  *   | Space     | O(1) extra        | a few integer accumulators           |
  *   +-----------+-------------------+--------------------------------------+
  *
+ * Complexity derivation (per-window count + collision expectation):
+ *   PREPROCESS: computing high_pow = B^(m-1) is m-1 modular mults, and the two
+ *   initial hashes each fold in m chars -> Theta(m).
+ *   SEARCH: the loop visits every window i = 0..n-m, i.e. (n - m + 1) windows.
+ *   Per window the rolling-hash update and the hash comparison are O(1). A hash
+ *   HIT (real match OR collision) triggers a verify of up to m chars. Let W be
+ *   the number of hitting windows:
+ *
+ *       C(n, m) = SUM_{i=0}^{n-m} O(1)  +  W * O(m)
+ *               = (n - m + 1) + W * m
+ *
+ *   EXPECTED case: for a hash of range M ~ 1e9, a non-matching window collides
+ *   with probability ~1/M, so E[false hits] = (n-m+1)/M ~ 0; assuming O(1) true
+ *   occurrences, E[W]*m = O(m). Total expected = (n-m+1) + O(m) = O(n + m).
+ *   WORST case: every window hits (all collide, or a pathological all-equal text
+ *   like T="aa..a", P="a..a"), so W = n-m+1 and each verify costs m:
+ *
+ *       C_worst = SUM_{i=0}^{n-m} m = m * (n - m + 1) = O(n * m)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Randomized / data-dependent, so bounds are per case. The scan visits all
+ *   (n-m+1) windows regardless => Omega(n) lower bound; with rare collisions the
+ *   verify work is negligible => EXPECTED Theta(n + m). The WORST case (every
+ *   window verified) is Theta(n*m); thus overall time is O(n*m) (upper) and
+ *   Omega(n) (lower), not a single Theta. Verifying on every hit keeps the
+ *   answer EXACT (Las Vegas) -- only the runtime is random. The comparison-sort
+ *   floor Omega(n log n) does not apply (hashing-based search, not a sort); the
+ *   only universal floor is Omega(n + m), to read both inputs.
+ *
  * Key points:
  *   - Rolling hash makes each window transition O(1).
  *   - Always verify on a hash hit -> exact matching despite collisions.

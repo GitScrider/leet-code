@@ -40,6 +40,36 @@
  *   +----------------+----------------+
  *   No sorting is needed -- one linear scan settles both feasibility and start.
  *
+ * Complexity derivation (single linear scan; instruction count):
+ *   Let n = number of stations. canCompleteCircuit runs ONE for-loop over
+ *   i = 0, 1, ..., n-1. Each iteration does a fixed amount of work: compute
+ *   diff = gas[i]-cost[i], two additions (total, tank), one comparison, and an
+ *   O(1) reset assignment when tank < 0 -- the reset does NOT rescan, it only
+ *   moves the candidate start forward. So work per step is a constant c, and
+ *       C(n) = SUM_{i=0}^{n-1} c = c*n = O(n).
+ *   The loop always executes all n iterations (no early exit): the global total
+ *   must see every edge to decide feasibility. Space is O(1): three scalars
+ *   (total, tank, start), no auxiliary arrays.
+ *   Contrast: the brute-force verifier tries every start and simulates the loop,
+ *       C_bf(n) = SUM_{s=0}^{n-1} SUM_{step=0}^{n-1} c = c*n^2 = O(n^2),
+ *   which the single-pass greedy replaces by exploiting the prefix-sum structure.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here f(n) = c*n exactly, with g(n) = n:
+ *     upper  O:     f(n) <= c*n            for n >= 1  => O(n)
+ *     lower  Omega: every input forces all n iterations (each station must be
+ *                   read once to form the total) => f(n) >= c*n => Omega(n)
+ *     tight  Theta: both hold  => Theta(n).
+ *   The cost is data-INDEPENDENT (the same n iterations run whatever the fuel
+ *   values), so best = average = worst = Theta(n). The comparison-sort lower
+ *   bound Omega(n log n) is IRRELEVANT here: the algorithm never sorts -- it uses
+ *   running prefix sums -- and Omega(n) is simply the unavoidable cost of reading
+ *   all N stations once.
+ *
  * Key points:
  *   - Two invariants: a GLOBAL total (feasibility) and a LOCAL running tank
  *     (candidate start). The global sum is what lets one pass suffice.

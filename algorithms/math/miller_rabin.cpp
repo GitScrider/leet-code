@@ -19,6 +19,36 @@
  *   +-----------------------------+---------------------------+
  *   Space: O(1).
  *
+ * Complexity derivation (bases * exponent length * multiply cost):
+ *   Fix the witness-set size k = 12. Factor n - 1 = d * 2^s; since 2^s <= n - 1
+ *   we have s <= log2 n and d < n. For EACH base a the work is:
+ *     - pow_mod(a, d, n): binary exponentiation runs floor(log2 d) + 1 iterations,
+ *       each a squaring plus at most one multiply, i.e. SUM_{i} O(1) mul_mod
+ *       = O(log d) = O(log n) modular multiplications;
+ *     - witness loop: at most s - 1 < log2 n further squarings = O(log n) mul_mod.
+ *   So each base issues O(log n) + O(log n) = O(log n) modular multiplications.
+ *   Cost of ONE mul_mod:
+ *     - portable fallback: a Russian-peasant loop over the bits of b (b < n),
+ *       i.e. floor(log2 b) + 1 = O(log n) add/shift steps  ->  O(log n);
+ *     - __int128 fast path: one 128-bit multiply plus one mod  ->  O(1).
+ *   Multiplying the three factors in the portable model (the stated bound):
+ *       C(n) = k * (O(log n) mul_mod per base) * (O(log n) per mul_mod)
+ *            = O(k log^2 n).
+ *   On the __int128 path each mul_mod is O(1), dropping one log to O(k log n).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Definitions: f = O(g) iff f <= c2*g; f = Omega(g) iff f >= c1*g; f = Theta(g)
+ *   iff both, for positive c1, c2 and all n >= n0.
+ *   The base count k = 12 is a CONSTANT, and the exponent length floor(log2 d)+1
+ *   and round count s are pinned by n's bit pattern, so the operation count is
+ *   fixed to within constant factors. Every call past the O(1) small-prime screen
+ *   runs at least the base-2 pow_mod (a full O(log n)-length exponentiation), so
+ *   C(n) = Omega(log^2 n); at most k bases with their witness loops run, so
+ *   C(n) = O(k log^2 n). As k is constant (1 <= bases executed <= 12) these meet:
+ *       C(n) = Theta(log^2 n)   (portable model; Theta(log n) with __int128).
+ *   Miller-Rabin is an exponentiation/divisibility test, not a comparison sort,
+ *   so the Omega(n log n) comparison lower bound is irrelevant.
+ *
  * Key points / assumptions:
  *   - Deterministic for the entire 64-bit range with the fixed 12-base set.
  *   - Safe modular multiplication is essential: a*b with a,b < n can overflow

@@ -20,6 +20,40 @@
  *   | Fibonacci(n) (K = 2)     | O(log n)            |
  *   +--------------------------+---------------------+
  *
+ * Complexity derivation (operation counts):
+ *   (1) mat_mul -- three nested loops over a KxK matrix, O(K^3):
+ *       Indices i, k, j each range over K values and the body is O(1), so
+ *           C(K) = SUM_{i=0}^{K-1} SUM_{k=0}^{K-1} SUM_{j=0}^{K-1} c
+ *                = c * K^3 = O(K^3).
+ *       The "if (A[i][k]==0) continue" only skips work; a DENSE matrix still
+ *       executes all K^3 inner steps, which is the stated bound.
+ *   (2) mat_pow(base, n) -- binary exponentiation, O(K^3 * log n):
+ *       The while loop halves exp each turn (exp >>= 1), so it runs
+ *       floor(log2 n) + 1 times. Per turn it does one squaring plus, when the
+ *       current bit is set, one product -- at most 2 matrix multiplies:
+ *           multiplies = (floor(log2 n)+1) squarings + popcount(n) products
+ *                      <= 2*(floor(log2 n)+1).
+ *       Each multiply is O(K^3), giving
+ *           T(n) = O(K^3) * O(log n) = O(K^3 * log n).
+ *   (3) fib_matrix(n) -- fixes K = 2, so K^3 = 8 is a constant:
+ *           T(n) = O(8 * log n) = O(log n),
+ *       versus the O(n) linear-DP scan (fib_linear) it replaces.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)   for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)          for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   mat_mul on a dense KxK matrix does exactly c*K^3 steps (independent of the
+ *   entry values): c1*K^3 <= C(K) <= c2*K^3 => Theta(K^3).
+ *   mat_pow ALWAYS performs floor(log2 n)+1 squarings; the extra products range
+ *   from 1 (n a power of two, one set bit) to floor(log2 n)+1 (all bits set), so
+ *   the multiply count stays between log2 n and 2*log2 n -- Theta(log n) either
+ *   way. Hence T(n) = Theta(K^3 * log n), and fib_matrix (K = 2) is Theta(log n).
+ *   This is arithmetic, not a comparison sort, so the sorting lower bound
+ *   Omega(n log n) is irrelevant; the log n is in the INDEX n, an exponential
+ *   speedup over evaluating the recurrence linearly.
+ *
  * Key points / assumptions:
  *   - Entries are kept modulo MOD to prevent overflow: without a modulus F(n)
  *     grows exponentially and blows past 64 bits within ~90 terms.

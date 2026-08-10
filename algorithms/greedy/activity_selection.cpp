@@ -33,6 +33,38 @@
  *   +-------------------+------------------+
  *   Total: O(n log n), dominated by the sort.
  *
+ * Complexity derivation (sort + linear scan):
+ *   Two phases whose costs simply add. Let C(n) be the total work.
+ *     Phase 1 -- sort by finish time. std::stable_sort is a comparison sort,
+ *     so it performs Theta(n log n) key comparisons (see the decision-tree
+ *     lower bound below); with enough scratch memory this is the O(n log n)
+ *     the table cites.
+ *     Phase 2 -- one linear scan. The loop visits each sorted activity once
+ *     and does O(1) work apiece (one test start >= lastFinish plus at most one
+ *     push_back and a lastFinish update):
+ *         S(n) = SUM_{i=0}^{n-1} c1  =  c1 * n  =  O(n).
+ *   Adding the phases:
+ *         C(n) = (c*n*log2 n) + (c1*n) = O(n log n) + O(n) = O(n log n),
+ *   since n log n dominates n for n >= 2. The sort is the bottleneck.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The greedy scan is input-independent Theta(n); the comparison sort fixes
+ *   the overall order. A comparison sort must distinguish all n! input
+ *   permutations, so its decision tree has >= n! leaves and height
+ *   >= log2(n!) = Theta(n log n) (Stirling) -> sorting is Omega(n log n), and
+ *   stable_sort matches it at O(n log n) -> Theta(n log n). Hence, with
+ *   g(n) = n log n:
+ *     upper  O:     C(n) <= c2 * (n log2 n)  for n >= 2  => O(n log n)
+ *     lower  Omega: C(n) >= c1 * (n log2 n)  for n >= 2  => Omega(n log n)
+ *     tight  Theta: both hold                            => Theta(n log n)
+ *   The bound is the SAME for best/average/worst: the O(n) selection pass can
+ *   never dominate the mandatory Theta(n log n) sort, so no per-case split is
+ *   needed (unlike an adaptive algorithm such as bubble sort).
+ *
  * Key points:
  *   - Sort key is FINISH time (ascending); sorting by start time or by
  *     shortest duration does NOT give an optimum in general.

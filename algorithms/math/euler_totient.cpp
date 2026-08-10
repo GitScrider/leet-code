@@ -24,6 +24,43 @@
  *   | phi(1..n) sieve            | O(n log log n)   |
  *   +----------------------------+------------------+
  *
+ * Complexity derivation (operation counts):
+ *   (1) euler_phi(n) -- trial division to sqrt(n), O(sqrt(n)):
+ *       The outer loop tests candidate factors p = 2, 3, ... while p*p <= n, i.e.
+ *       at most floor(sqrt(n)) iterations of O(1) work:
+ *           C(n) = SUM_{p=2}^{floor(sqrt(n))} c  +  (inner divisions).
+ *       Each inner "while (n % p == 0) n /= p" shrinks n by a factor >= p >= 2,
+ *       so across the WHOLE run the divisions number at most log2(n) (a geometric
+ *       collapse) -- a lower-order term. Hence
+ *           C(n) = c*(sqrt(n) - 1) + O(log n) = O(sqrt(n)).
+ *   (2) euler_phi_sieve(n) -- Eratosthenes structure, O(n log log n):
+ *       For each prime p <= n the inner loop steps m = p, 2p, 3p, ... <= n, i.e.
+ *       floor(n/p) updates of O(1); composites are skipped (phi[p] != p). Summing
+ *       over primes only:
+ *           T(n) = SUM_{p prime <= n} n/p = n * SUM_{p prime <= n} (1/p).
+ *       By Mertens' theorem SUM_{p<=n} 1/p = ln ln n + M + o(1), so
+ *           T(n) = n * (ln ln n + O(1)) = O(n log log n)
+ *       (the iota init and the O(n) prime tests add only a lower-order O(n)).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)   for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)          for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   euler_phi is ADAPTIVE (the loop bound uses the shrinking n):
+ *     WORST case  n prime: no factor is ever stripped, so the loop runs the full
+ *                 floor(sqrt(n)) steps         => Theta(sqrt(n)).
+ *     BEST case   n = 2^k: p = 2 strips everything, but the inner
+ *                 "while (n % p == 0) n /= p" runs k = log2(n) times to drop
+ *                 n from 2^k down to 1; the p*p <= n test then fails at p = 3,
+ *                 yet only AFTER those log n divisions  => Theta(log n).
+ *     Over all inputs the running time is thus O(sqrt(n)) (from the worst case)
+ *     and Omega(log n) (from the best case), not a single Theta.
+ *   euler_phi_sieve does the SAME work for a given n (data-independent), so it is
+ *   tight: c1 * n log log n <= T(n) <= c2 * n log log n => Theta(n log log n).
+ *   Both are number-theoretic, not comparison sorts, so the comparison-sort lower
+ *   bound Omega(n log n) does NOT apply.
+ *
  * Key points / assumptions:
  *   - n >= 1; phi(1) = 1 by convention (the empty product / gcd(1,1)=1).
  *   - Trial division divides out each prime factor fully before moving on, so

@@ -6,7 +6,7 @@
  *       z[i] = length of the longest substring starting at i that is also a
  *              prefix of S      (by convention z[0] = 0, or n; we use 0).
  *   Example: S = "aabxaabxcaabxaabxay"
- *            z = [0,1,0,0,3,1,0,0,0,4,1,0,0,3,1,0,0,1,0]
+ *            z = [0,1,0,0,4,1,0,0,0,8,1,0,0,5,1,0,0,1,0]
  *
  *   The array is built in O(n) by maintaining the "Z-box" [l, r], the interval
  *   with the largest right end r that we know matches a prefix of S
@@ -33,6 +33,40 @@
  *   | Search    | O(n + m)      | scan the Z-array once                    |
  *   | Space     | O(n + m)      | the combined string and its Z-array     |
  *   +-----------+---------------+-----------------------------------------+
+ *
+ * Complexity derivation (amortized linear scan; N = m + 1 + n = |combined|):
+ *   z_array runs one loop i = 1 .. N-1. Per i it does O(1) box bookkeeping,
+ *   then a while-loop of explicit character comparisons. Split each i's
+ *   comparisons into SUCCESSFUL ones (each does ++z[i]) and the single FAILING
+ *   one that ends the while. Let e_i = number of successful matches at i. Every
+ *   successful match advances the frontier max(r, i + z[i]) by 1, and that
+ *   frontier is monotone non-decreasing and never exceeds N, so
+ *
+ *       SUM_{i=1}^{N-1} e_i <= N            (r only moves forward, 0 -> N-1).
+ *
+ *   Total operations for the build:
+ *
+ *       C(N) = SUM_{i=1}^{N-1} ( O(1) + e_i + 1 )
+ *            = (N-1)*O(1) + SUM_{i} e_i + (N-1)
+ *            <= (N-1) + N + (N-1)
+ *            = O(N) = O(n + m).
+ *
+ *   The search then scans the Z-array once, SUM_{i=m+1}^{N-1} O(1) = O(N), and
+ *   building the combined string is O(N) too, so overall time is O(n + m).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(N) = O(g)      iff  EXISTS c2, n0 :       f(N) <= c2*g(N)  for N >= n0
+ *     f(N) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(N) <= f(N)        for N >= n0
+ *     f(N) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here f(N) = C(N) with N = n + m + 1 and g(N) = N. The cost is NOT
+ *   data-dependent: every position must be read at least once (lower bound) and
+ *   is touched O(1) amortized (upper bound). With c1 = 1, c2 = 4, n0 = 1,
+ *       1*N <= f(N) <= 4*N   =>   build is Theta(N) = Theta(n + m),
+ *   and best = average = worst all share this tight bound. This is exact string
+ *   matching, not a comparison sort, so the Omega(n log n) sorting lower bound
+ *   does NOT apply; the relevant lower bound is Omega(n + m), since any matcher
+ *   must inspect every character of pattern and text at least once.
  *
  * Key points:
  *   - The Z-box [l, r] lets us reuse earlier comparisons; r never decreases.
@@ -130,7 +164,7 @@ int main() {
     // ---- Assert the Z-array on a known string ------------------------------
     assert((z_array("aabxaabxcaabxaabxay") ==
             std::vector<std::size_t>{
-                0, 1, 0, 0, 3, 1, 0, 0, 0, 4, 1, 0, 0, 3, 1, 0, 0, 1, 0}));
+                0, 1, 0, 0, 4, 1, 0, 0, 0, 8, 1, 0, 0, 5, 1, 0, 0, 1, 0}));
     // Simple repeated char: "aaaaa" -> z = [0,4,3,2,1].
     assert((z_array("aaaaa") == std::vector<std::size_t>{0, 4, 3, 2, 1}));
 

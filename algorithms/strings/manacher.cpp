@@ -31,6 +31,39 @@
  *   | Space     | O(n)            | O(1)                         |
  *   +-----------+-----------------+------------------------------+
  *
+ * Complexity derivation (amortized linear scan; padded length m = 2n + 3):
+ *   The main loop runs i = 1 .. m-2. Per i it does O(1) work to clip
+ *   p[i] = min(right - i, p[mirror]), then a while-loop that compares only
+ *   characters BEYOND the current boundary `right`. Let e_i = number of
+ *   successful expansions (each does ++p[i]). Every successful expansion that
+ *   passes `right` advances it by 1 via `right = i + p[i]`, and `right` is
+ *   monotone non-decreasing and bounded by m, so
+ *
+ *       SUM_{i=1}^{m-2} e_i <= m           (right only moves forward, 0 -> m).
+ *
+ *   Counting one failing comparison per center plus the O(1) bookkeeping:
+ *
+ *       C(m) = SUM_{i=1}^{m-2} ( O(1) + e_i + 1 )
+ *            = (m-2)*O(1) + SUM_{i} e_i + (m-2)
+ *            <= (m-2) + m + (m-2)
+ *            = O(m) = O(2n + 3) = O(n).
+ *
+ *   Building t and the final best-center scan are each SUM_{i} O(1) = O(m), so
+ *   the whole algorithm is O(n). Space: t and p[] are O(m) = O(n).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   With g(n) = n and f(n) = C(2n+3), the cost is input-INDEPENDENT: every
+ *   center is visited once (lower bound) and costs O(1) amortized (upper
+ *   bound). Constants c1 = 1, c2 = 16, n0 = 1 give 1*n <= f(n) <= 16*n, so
+ *       best = average = worst = Theta(n)   (tight),
+ *   beating the naive expand-around-center's Theta(n^2). No comparison-sort
+ *   Omega(n log n) bound applies here; this is palindrome detection, whose
+ *   natural lower bound is Omega(n) (each character must be read at least once).
+ *
  * Key points:
  *   - The separator trick unifies even/odd palindromes; sentinels kill bounds
  *     checks and any risk of size_t underflow while expanding.

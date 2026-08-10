@@ -27,6 +27,57 @@
  *   n = |V|, m = |E|. The 2-approximation NEVER exceeds twice the optimum; on
  *   many instances it is strictly worse than optimal (it is only a heuristic).
  *
+ * Complexity derivation (subset scan / branching recurrence / linear scan):
+ *   (1) Brute force. The outer loop runs over every subset mask = 0 .. 2^n - 1,
+ *       and for each mask the inner loop scans up to m edges, O(1) per edge:
+ *
+ *           C(n,m) = SUM_{mask=0}^{2^n - 1} (work to test one mask)
+ *                  = SUM_{mask=0}^{2^n - 1} O(m)
+ *                  = 2^n * O(m) = O(2^n * m).
+ *
+ *       (popcount of a feasible mask costs O(n) but is dominated by the m-edge
+ *       scan, so it does not change the order.)
+ *
+ *   (2) Branch & bound (edge branching). For an uncovered edge (u,v) a cover must
+ *       contain u OR v, a two-way branch. The refined worst-case recurrence
+ *       (standard exact-VC analysis: take v, else take v's >= 2 other neighbours,
+ *       after clearing degree-<=1 vertices by reduction) is
+ *
+ *           T(n) = T(n-1) + T(n-3) + O(m),      T(<=0) = O(1)   (base case)
+ *
+ *       Solve the homogeneous part via its characteristic equation x^3 = x^2 + 1,
+ *       i.e. x^3 - x^2 - 1 = 0, whose real root is alpha ~= 1.4656. Unfolding the
+ *       recursion tree, level d holds O(alpha^d) nodes, so
+ *
+ *           T(n) = O(alpha^n) = O(1.47^n).
+ *
+ *       NOTE: the plain two-way branch as literally coded, WITHOUT the degree
+ *       reduction, has the weaker worst case T(n) = 2*T(n-1) + O(m) = O(2^n * m);
+ *       O(1.47^n) is the refined bound the table cites.
+ *
+ *   (3) 2-approximation. One pass over the m edges (O(1) bit tests/sets each),
+ *       then one pass over the n vertices to extract the cover:
+ *
+ *           C(n,m) = SUM_{e in E} O(1) + SUM_{i=0}^{n-1} O(1) = O(m) + O(n)
+ *                  = O(n + m).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Per method:
+ *     Brute force   visits all 2^n masks always => Theta(2^n) mask iterations;
+ *                   with the O(m) edge scan the time is O(2^n * m).
+ *     Branch&bound  data-dependent: best case (edgeless graph) finds no uncovered
+ *                   edge at the root => Omega(m); worst case O(1.47^n). Overall it
+ *                   is O(1.47^n) (worst) and Omega(m) (best), not a single Theta,
+ *                   because pruning makes the cost input-dependent.
+ *     2-approx      always one edge pass + one vertex pass => Theta(n + m) (tight).
+ *   The comparison-sort lower bound Omega(n log n) does NOT apply here: this is a
+ *   graph covering problem, not a comparison sort. The governing lower bound is the
+ *   conjectured exponential hardness of the EXACT solution under P != NP.
+ *
  * Key points:
  *   - Branching rule: for ANY still-uncovered edge (u,v), a cover MUST contain
  *     u or v -> recurse including u, then including v; keep the smaller cover.

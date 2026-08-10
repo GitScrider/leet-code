@@ -19,6 +19,39 @@
  *   +----------------+-----------------+
  *   Space: O(1).
  *
+ * Complexity derivation (binary exponent: one loop iteration per bit):
+ *   The loop guard is  while (exp > 0)  and each pass ends with  exp >>= 1,
+ *   dropping exactly one binary digit of exp. So the iteration count equals the
+ *   bit-length L of exp:
+ *
+ *       C(exp) = SUM_{k=0}^{L-1} O(1) = L = floor(log2(exp)) + 1 = O(log exp).
+ *
+ *   Each iteration does O(1) work: one right shift, one conditional multiply (if
+ *   the current bit is set), and one square (skipped on the last bit). At most 2
+ *   multiplications per bit, so the total multiplication count is
+ *
+ *       M(exp) <= 2 * (floor(log2 exp) + 1) = O(log exp),
+ *
+ *   versus modpow_naive which performs exactly 'exp' multiplications = O(exp).
+ *   For modpow each mulmod is fixed-width (64/128-bit) O(1) arithmetic, so modpow
+ *   is likewise O(log exp).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; g(exp) = log exp):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(exp) <= c2*g(exp)  for exp >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(exp) <= f(exp)         for exp >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The ITERATION count depends only on the bit-length of exp, not on which bits
+ *   are set, so it is tight regardless of input:
+ *     log2(exp) <= C(exp) = floor(log2 exp) + 1 <= 2*log2(exp)  for exp >= 2,
+ *   giving C(exp) = Theta(log exp) (take c1 = 1, c2 = 2, n0 = 2). The number of
+ *   MULTIPLICATIONS varies only by a constant factor with the popcount of exp:
+ *     BEST  exp a power of two (one set bit): only squarings, ~log2 exp mults;
+ *     WORST exp = 2^L - 1 (all bits set): ~2*log2 exp mults;
+ *   both Theta(log exp), so the overall time is Theta(log exp). Measured against
+ *   the input SIZE (the L = log2 exp bits of the exponent) this is linear, O(L);
+ *   the exponential speedup over the naive O(exp) loop is the whole point.
+ *
  * Key points / assumptions:
  *   - Integer ipow: the caller keeps base/exp small enough that base^exp fits
  *     in int64; we avoid a final useless squaring so we don't overflow past the

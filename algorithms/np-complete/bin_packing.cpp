@@ -27,6 +27,57 @@
  *   FFD is often optimal on small instances but is NOT optimal in general --
  *   worst-case tight families push the ratio to 11/9.
  *
+ * Complexity derivation (state-space tree for exact; series for FFD):
+ *   EXACT branch-and-bound. Model the recursion as a tree whose depth is the
+ *   item index idx = 0..n-1; item idx is dropped into one open bin with room OR
+ *   a fresh bin. After idx placements at most idx bins are open, so the
+ *   branching factor at depth idx is <= idx + 1, and the number of complete
+ *   leaves is bounded by the product of the per-level branching factors:
+ *
+ *       L(n) <= PRODUCT_{idx=0}^{n-1} (idx + 1) = 1*2*...*n = n!
+ *
+ *   Ignoring capacity this enumerates the SET PARTITIONS of n items, counted by
+ *   the Bell number B(n) ~ (n/ln n)^n, already super-exponential (B(n) >=
+ *   2^(n-1)). Work per node: summing every open bin's load is SUM_bins |bin| =
+ *   idx = O(n) and the triedLoads dedup adds O(bins^2) = O(n^2), so
+ *
+ *       T_exact(n) = O(nodes * work) = O(n! * n^2),
+ *
+ *   dominated by the factorial/Bell term; the bound + symmetry + capacity
+ *   prunes only shrink the effective tree, so the class stays EXPONENTIAL --
+ *   matching the stated "exponential (small n)".
+ *
+ *   FFD. (1) descending comparison sort of n items = O(n log n). (2) placement:
+ *   let B = bins finally used and b_i <= B the open-bin count when item i is
+ *   placed; item i scans bins until the first fit at O(1) each, so
+ *
+ *       C_place = SUM_{i=0}^{n-1} b_i <= SUM_{i=0}^{n-1} B = n*B = O(n*bins).
+ *
+ *   Total T_FFD(n) = O(n log n) + O(n*bins) = O(n log n + n*bins), exactly the
+ *   table entry (and, since B <= n, at worst O(n log n + n^2)).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   EXACT solver is DATA-DEPENDENT (pruning), so bounds are per-case:
+ *     WORST  hard instances defeat pruning -> T = O(n!*n^2) with >= 2^(n-1)
+ *            node expansions => exponential; no polynomial upper bound exists
+ *            (BIN-PACKING is NP-hard).
+ *     BEST   trivial instances (every item = capacity, or all items fit one
+ *            bin) prune almost at once -> Omega(n log n), the descending sort.
+ *   Over all inputs: O(exponential) upper (worst) and Omega(n log n) lower
+ *   (best); NOT a single Theta because best << worst.
+ *   FFD: f(n) = a*n log n + b*(n*bins). With g(n) = n log n + n*bins,
+ *     c1*g(n) <= f(n) <= c2*g(n) for n >= n0 => worst case Theta(n log n +
+ *     n*bins); best case (each item lands in the first bin scanned) makes
+ *     placement O(n), leaving Theta(n log n) dominated by the sort. Overall
+ *     O(n log n + n*bins) upper, Omega(n log n) lower.
+ *   Comparison-sort note: the Omega(n log n) comparison lower bound governs
+ *   ONLY FFD's sorting sub-step; it does NOT bound the packing DECISION, which
+ *   is NP-hard -- the exact solver's cost comes from the search tree, not sorting.
+ *
  * Key points:
  *   - Exact solver assigns items (sorted descending) one at a time to an
  *     existing bin that fits or to a fresh bin, pruning whenever the partial

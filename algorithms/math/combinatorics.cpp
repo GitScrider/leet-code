@@ -24,6 +24,45 @@
  *   |   precomputed, per query) | O(log p) inverse|
  *   +---------------------------+-----------------+
  *
+ * Complexity derivation (operation counts per routine):
+ *   (1) nCr_exact / nPr_exact -- multiplicative loop, O(r):
+ *       nCr_exact FIRST applies the symmetry C(n,r)=C(n,n-r), setting
+ *       r <- min(r, n-r) <= n/2; its loop then runs EXACTLY that reduced r
+ *       iterations, each doing one 64-bit multiply plus one exact divide.
+ *       nPr_exact has NO symmetry step: its loop runs EXACTLY the ORIGINAL r
+ *       iterations (each one 64-bit multiply, no divide). In both cases the
+ *       per-step work is a constant c, and with the loop bound r (reduced for
+ *       nCr, unreduced for nPr):
+ *           C(n,r) = SUM_{i=1}^{r} c = c * r = O(r).
+ *       No branch depends on the VALUES, only on r, so the count is exact.
+ *   (2) pascal_triangle(N) -- nested rows, O(N^2):
+ *       Row n costs (n+1) initializing assignments plus (n-1) additions, i.e.
+ *       c*(n+1) work. Summing over all rows n = 0 .. N-1:
+ *           T(N) = SUM_{n=0}^{N-1} c*(n+1) = c * SUM_{k=1}^{N} k
+ *                = c * N*(N+1)/2 = (c/2)*(N^2 + N) = O(N^2)   (Gauss series).
+ *   (3) nCr_mod_p(n,r,p) -- factorial precompute + Fermat inverse:
+ *       Building fact[0..n] is one pass of n modular multiplies:
+ *           P(n) = SUM_{i=1}^{n} c = c*n = O(n).
+ *       mod_pow(a, p-2, p) squares the base and halves the exponent, so it runs
+ *       floor(log2(p-2)) + 1 iterations of O(1) work => O(log p). With the
+ *       factorials already built, each extra query costs only that O(log p).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)   for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)          for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Every routine's step count depends only on its size parameter, never on the
+ *   data values, so each admits a single TIGHT bound (best == worst):
+ *     nCr_exact / nPr_exact:  C = c*r                      => Theta(r).
+ *     pascal_triangle(N):     T = (c/2)(N^2+N), with
+ *                             (c/2)N^2 <= T <= c*N^2 (N>=1) => Theta(N^2).
+ *     nCr_mod_p precompute:   P = c*n                       => Theta(n).
+ *     Fermat inverse:         mod_pow ~ c*log2 p            => Theta(log p).
+ *   These are COUNTING / arithmetic routines, not comparison sorts, so the
+ *   comparison-sort lower bound Omega(n log n) does NOT apply: the work is set by
+ *   arithmetic operations on n, r, and p, not by any ordering comparisons.
+ *
  * Key points / assumptions:
  *   - Modulus p must be PRIME for the Fermat inverse to exist for r! and (n-r)!.
  *   - p is kept <= ~2^31 so that a product of two residues fits in int64_t

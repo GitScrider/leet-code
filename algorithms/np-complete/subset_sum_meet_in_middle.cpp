@@ -28,6 +28,47 @@
  *   That is great when T is small but blows up when T is a large binary number;
  *   meet-in-the-middle is the method of choice when n is small but T is huge.
  *
+ * Complexity derivation (enumerate -> sort -> binary-search each half):
+ *   BRUTE FORCE. The loop runs over every subset mask in [0, 2^n); each mask
+ *   sums up to n items:
+ *
+ *       C_brute(n) = SUM_{mask=0}^{2^n - 1} ( n ) = n * 2^n = O(2^n * n),
+ *
+ *   with O(1) extra space (a running sum only).
+ *
+ *   MEET-IN-THE-MIDDLE. Split n into two halves of size ~n/2. Let M = 2^(n/2)
+ *   be the number of subsets per half. The three phases:
+ *     (1) enumerateHalf() on each half: M subsets, each summed in O(n/2) work
+ *             2 * M * (n/2) = Theta(n * 2^(n/2))
+ *     (2) sort one half's M sums (comparison sort)
+ *             M * log2(M) = 2^(n/2) * (n/2) = Theta(n * 2^(n/2))
+ *     (3) for each of the M left sums, one binary search over the M right sums
+ *             M * log2(M) = 2^(n/2) * (n/2) = Theta(n * 2^(n/2))
+ *   Adding the phases:
+ *
+ *       C_mitm(n) = Theta(n*2^(n/2)) + Theta(n*2^(n/2)) + Theta(n*2^(n/2))
+ *                 = O(2^(n/2) * n)
+ *
+ *   Space: the two sum arrays hold 2 * M pairs -> O(2^(n/2)). This HALVES the
+ *   exponent (2^n -> 2^(n/2)) but the cost is still exponential in n.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   MITM: phases (1) and (2) run unconditionally regardless of the answer; the
+ *     early return in phase (3) only shortens the final scan, which is already
+ *     bounded by the enumeration/sort cost. Hence both directions hold:
+ *         c1 * n*2^(n/2) <= C_mitm <= c2 * n*2^(n/2)  =>  Theta(2^(n/2) * n).
+ *   The comparison-sort lower bound Omega(M log M) with M = 2^(n/2) equals
+ *     2^(n/2) * (n/2) -- exactly the enumeration cost -- so the internal sort is
+ *     asymptotically optimal and adds no extra order. That Omega(n log n)-style
+ *     bound governs only that sort; the problem's exponential difficulty is
+ *     combinatorial (NP-complete), not a sorting bound. The pseudo-polynomial
+ *     DP alternative is Theta(n*T): polynomial in n and the VALUE T, but
+ *     exponential in the bit-LENGTH of T, so not a true polynomial bound.
+ *
  * Key points:
  *   - Split the n items into two halves; enumerate all 2^(n/2) subset sums of
  *     each half. Sort one half's sums, then for every sum s of the other half

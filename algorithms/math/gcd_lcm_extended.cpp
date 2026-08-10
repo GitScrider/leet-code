@@ -22,6 +22,36 @@
  *   +-------------------+---------------------+
  *   Space: O(1) for the iterative gcd, O(log) recursion stack otherwise.
  *
+ * Complexity derivation (Euclid: successive remainders + halving lemma):
+ *   The recursive gcd obeys  T(a, b) = T(b, a mod b) + O(1),  base T(a, 0) = O(1),
+ *   so the running time is O(1) times the NUMBER OF DIVISION STEPS N. Bound N.
+ *   Write the remainder sequence r0 = a, r1 = b, r_{k+2} = r_k mod r_{k+1}.
+ *   Halving lemma: for x >= y > 0,  x mod y < x/2.
+ *     - if y <= x/2 then  x mod y < y <= x/2;
+ *     - if y >  x/2 then  floor(x/y) = 1, so x mod y = x - y < x - x/2 = x/2.
+ *   Hence  r_{k+2} < r_k / 2 : the value at least HALVES every two steps. After N
+ *   steps the value is < min(a,b) / 2^(N/2), and it must drop below 1 to hit 0:
+ *
+ *       min(a,b) / 2^(N/2) < 1  =>  N/2 <= log2(min(a,b))  =>  N <= 2*log2(min(a,b)).
+ *
+ *   So the step count is  C(a,b) = SUM_{k=0}^{N-1} O(1) = O(N) = O(log min(a,b)).
+ *   (Lame's theorem sharpens the worst case to consecutive Fibonacci inputs,
+ *   giving N <= log_phi(min(a,b)) ~= 1.44*log2(min(a,b)), the same order.) ext_gcd
+ *   runs the identical recursion with O(1) extra work per return, and lcm is one
+ *   gcd plus an O(1) divide-and-multiply, so all three are O(log min(a,b)).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; size m = min(a, b)):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(m) <= c2*g(m)  for m >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(m) <= f(m)         for m >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The step count is DATA-DEPENDENT, so bounds are per-case (g(m) = log m):
+ *     BEST case   b divides a (e.g. b == 0, or a mod b == 0): ONE step => Theta(1).
+ *     WORST case  consecutive Fibonacci inputs: N ~= 1.44*log2 m => Theta(log m).
+ *   Over all inputs the running time is O(log min(a,b)) (upper, from the worst
+ *   case) and Omega(1) (lower, from the best case) -- not a single Theta, since
+ *   best (constant) != worst (logarithmic).
+ *
  * Key points / assumptions:
  *   - Inputs are treated as non-negative for clarity; gcd only depends on
  *     magnitudes since gcd(a, b) = gcd(|a|, |b|).

@@ -34,6 +34,37 @@
  *   | Space           | O(sigma)         | O(1)                    |
  *   +-----------------+------------------+-------------------------+
  *
+ * Complexity derivation (window shifts; n=|text|, m=|pattern|, sigma=256):
+ *   Preprocessing: last.fill(-1) writes sigma entries, then the loop over P
+ *   runs SUM_{j=0}^{m-1} 1 = m iterations of O(1):
+ *       P(m) = sigma + m = O(m + sigma)  (= O(m) since sigma = 256 is fixed).
+ *   Search: let the window stop at alignments s_0=0, s_1, ..., s_{k-1}. At the
+ *   t-th alignment the right-to-left loop does c_t comparisons (1 <= c_t <= m)
+ *   and then shifts by delta_t >= 1. Total comparisons C = SUM_{t=0}^{k-1} c_t.
+ *
+ *     BEST case: every rightmost char mismatches and is absent from P, so
+ *       c_t = 1 and delta_t = m. Then k = ceil((n-m+1)/m) windows and
+ *           C_best = SUM_{t=0}^{k-1} 1 = k = O(n/m)  (sublinear: ~n/m chars).
+ *     WORST case: e.g. P="a...a" in T="a...a"; each window compares the whole
+ *       pattern (c_t = m) yet can shift only delta_t = 1, so k = n - m + 1 and
+ *           C_worst = SUM_{t=0}^{n-m} m = (n - m + 1)*m = O(n*m).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)     iff EXISTS c2,n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g) iff EXISTS c1,n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g) iff f = O(g) AND f = Omega(g)
+ *   Boyer-Moore (bad-character only) is ADAPTIVE, so the bound is PER CASE:
+ *     BEST  search  C_best  = ceil((n-m+1)/m)          => Theta(n/m)  (tight).
+ *     WORST search  C_worst = (n-m+1)*m; with g = n*m and m <= n/2,
+ *                   (1/2)*n*m <= C_worst <= n*m         => Theta(n*m)  (tight).
+ *   Over ALL inputs the search is thus O(n*m) (upper bound, from the worst case)
+ *   and Omega(n/m) (lower bound, from the best case); it is NOT a single Theta
+ *   precisely because best != worst -- the whole reason the table splits
+ *   Best/Worst. The bad-character rule alone cannot force a linear worst case;
+ *   the good-suffix rule (+ Galil) would. This is exact matching, not sorting,
+ *   so the comparison-sort Omega(n log n) lower bound is irrelevant here.
+ *
  * Key points:
  *   - Sublinear best case: if every mismatched text char is absent from P we
  *     jump m positions each time, touching only ~n/m characters of the text.

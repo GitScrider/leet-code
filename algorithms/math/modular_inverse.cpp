@@ -20,6 +20,43 @@
  *   +-----------------------------+------------------+
  *   Space: O(log m) recursion for ext_gcd, O(1) otherwise.
  *
+ * Complexity derivation (binary exponentiation + Euclid step count):
+ *   Treat each 64-bit modular multiply / mod as O(1) (word-RAM model; the file
+ *   caps m <= 2^31, so every product of two residues < m^2 fits in int64). The
+ *   two constructions are analysed independently.
+ *
+ *   (1) Fermat via mod_pow(a, p-2, p). Let e = p - 2. The while loop runs once
+ *       per bit of e: after iteration i the exponent equals floor(e / 2^i), and
+ *       it halts when floor(e / 2^i) = 0, i.e. when 2^i > e. So the iteration
+ *       count is L = floor(log2 e) + 1 = floor(log2(p-2)) + 1. Each iteration
+ *       does one squaring plus (only if bit b_i = 1) one multiply, hence
+ *           M(p) = SUM_{i=0}^{L-1} (1 + b_i) = L + popcount(e)
+ *                <= 2L = 2*(floor(log2(p-2)) + 1) = O(log p).
+ *
+ *   (2) Extended Euclid ext_gcd(a0, m). Each call maps (a, b) -> (b, a mod b)
+ *       with O(1) local work, giving the recurrence
+ *           T(a, b) = T(b, a mod b) + O(1),   T(a, 0) = O(1)   (base case).
+ *       By Lame's theorem the k-step worst case is consecutive Fibonacci inputs:
+ *       k steps force b >= F_{k+1} ~ phi^(k+1)/sqrt5, phi = (1+sqrt5)/2, so
+ *           b >= phi^(k-1)  =>  k <= log_phi(b) + 1 = O(log m).
+ *       Total work = SUM over the k = O(log m) steps of O(1) = O(log m), matched
+ *       by an O(log m)-deep recursion stack (the stated space).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(x) <= c2*g(x)  for x >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(x) <= f(x)         for x >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   (1) Fermat: L = floor(log2(p-2)) + 1 is fixed by the bit length of p, not by
+ *       the data, so with g = log p, (1/2)*log2 p <= L <= 2*log2 p for p >= 4
+ *       =>  time is Theta(log p) (tight).
+ *   (2) Extended Euclid is ADAPTIVE (step count depends on the operands):
+ *       BEST  case (a0 = 1 or m mod a0 = 0) halts in O(1) steps  => Omega(1);
+ *       WORST case (Fibonacci-adjacent operands) needs Theta(log m) steps.
+ *       Over all inputs the time is thus O(log m) (upper, worst) and Omega(1)
+ *       (lower, best), not a single Theta. Both routines are number-theoretic,
+ *       not comparison sorts, so the Omega(n log n) comparison bound is moot.
+ *
  * Key points / assumptions:
  *   - Fermat's method REQUIRES a prime modulus; Extended Euclid is the general
  *     tool and also reports the non-invertible case (gcd != 1).

@@ -29,6 +29,42 @@
  *   nothing to approximate. (A faster O(2^n * n^2) Held-Karp-style DP exists,
  *   but backtracking is the clearest teaching form and prunes aggressively.)
  *
+ * Complexity derivation (backtracking state-space tree, worst case):
+ *   Worst case = the complete graph K_n, where the adjacency test never prunes.
+ *   findHamiltonianPath tries all n start vertices; from a partial path of length
+ *   d the next vertex may be any of the (n-1-d) still-unvisited vertices, so the
+ *   branching factor shrinks by one per level. The number of root-to-leaf vertex
+ *   orderings the search can enumerate is thus the falling product
+ *
+ *       L(n) = n * (n-1) * (n-2) * ... * 2 * 1
+ *            = PROD_{k=1}^{n} k
+ *            = n!        (n choices of start times (n-1)! extensions each).
+ *
+ *   Equivalently the node count obeys the subtract recurrence T(k) = 1 + k*T(k-1),
+ *   T(0) = 1 (k = #unplaced vertices), whose solution SUM_{j=0}^{k} k!/(k-j)!
+ *   = Theta(k!) is again factorial. Each node scans all n vertices for an
+ *   unvisited neighbor -> O(n) work per node, so strictly the cost is O(n * n!);
+ *   the factorial dominates and, counting complete orderings as the header does,
+ *   the bound is O(n!). The cycle finder fixes the start (n >= 3), enumerating
+ *   (n-1)! orderings -- the same factorial class.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Backtracking is data-dependent (adjacency pruning), so bounds are PER-CASE:
+ *     BEST case   heavy pruning: e.g. a degree-0 / isolated vertex or a start with
+ *                 no valid extension kills every branch after O(n) work -- the
+ *                 search bottoms out in Omega(n) (it must read the n adjacencies
+ *                 at least once).
+ *     WORST case  the complete graph K_n never prunes -> the full ordering tree is
+ *                 walked, Theta(n!) orderings (Theta(n * n!) with per-node scans).
+ *   Over ALL inputs the time is thus O(n!) (upper, from K_n) and Omega(n) (lower,
+ *   from an instantly-pruned graph); NOT a single Theta because best != worst. The
+ *   comparison-sort Omega(n log n) bound does not apply (a decision problem, not a
+ *   sort); no polynomial algorithm is known, the problem being NP-complete.
+ *
  * STATE SPACE & PRUNING:
  *   We extend a partial path one vertex at a time. From the current endpoint we
  *   may only step to an UNVISITED, ADJACENT vertex -- that adjacency test is the

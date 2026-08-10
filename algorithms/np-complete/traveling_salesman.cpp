@@ -40,6 +40,45 @@
  *   ratio needs the triangle inequality plus a smarter method such as
  *   Christofides' 1.5-approximation.)
  *
+ * Complexity derivation (dynamic programming: #states * work per state):
+ *   State dp[mask][i]: mask ranges over the 2^n subsets of cities, i over the n
+ *   possible current endpoints, so the number of states is
+ *
+ *       #states = 2^n * n .
+ *
+ *   Transition from dp[mask][i]: relax into each city j not yet in mask, an O(1)
+ *   step done for up to n choices of j -> O(n) work per state. The three nested
+ *   loops in heldKarp() (mask, then i, then j) count this exactly:
+ *
+ *       C(n) = SUM_{mask=0}^{2^n - 1} SUM_{i in mask} SUM_{j not in mask} O(1)
+ *            <= SUM_{mask=0}^{2^n - 1} (n * n)
+ *            =  2^n * n^2
+ *            =  O(2^n * n^2).
+ *
+ *   Closing the loop (min over n endpoints) and reconstructing the tour (walking
+ *   n parent pointers) add only O(n), dominated by the fill. Two tables of
+ *   2^n * n ints (dp and parent) give the space O(2^n * n). This is EXPONENTIAL
+ *   in n (the subset count 2^n), not pseudo-polynomial; it still crushes the
+ *   O(n!) permutation search, since 2^n * n^2 = o(n!) by Stirling
+ *   (n! ~ sqrt(2*pi*n) * (n/e)^n).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Held-Karp fills EVERY one of the 2^n * n states with O(n) work regardless of
+ *   the distance matrix -- there is no data-dependent early exit -- so with
+ *   g(n) = 2^n * n^2 the count is squeezed c1*g(n) <= C(n) <= c2*g(n) for n >= 1:
+ *     upper  O:     C(n) = O(2^n * n^2)
+ *     lower  Omega: C(n) = Omega(2^n * n^2)
+ *     tight  Theta: C(n) = Theta(2^n * n^2)   (best = worst; input-independent).
+ *   Because the work is input-independent this is a single Theta, not a per-case
+ *   Best/Worst split. The comparison-sort Omega(n log n) bound is irrelevant (not
+ *   a sort); the O(n!) brute-force oracle and the O(n^2) nearest-neighbor
+ *   heuristic are separate algorithms with their own tight bounds Theta(n!) and
+ *   Theta(n^2).
+ *
  * KEY POINTS:
  *   - Subsets are bitmasks over uint32_t: bit i set == "city i is in the set".
  *     We only process masks containing bit 0, since every path starts at 0.

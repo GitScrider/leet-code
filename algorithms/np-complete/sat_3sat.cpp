@@ -29,6 +29,58 @@
  *   optimization, so there is nothing to approximate here. In practice unit
  *   propagation + pure-literal elimination prune enormous parts of the 2^V tree.
  *
+ * Complexity derivation (backtracking state-space tree -> recurrence):
+ *   Let V = #variables, m = #clauses, L = total literals over all clauses (the
+ *   input size; for 3-SAT L = 3m). DPLL fixes one variable per level and, when it
+ *   must guess, tries the chosen literal TRUE then FALSE -> branching factor 2.
+ *   With one variable pinned per level the tree has depth <= V, hence
+ *
+ *       #leaves <= 2^V ,   #nodes <= 2^(V+1) - 1 = O(2^V).
+ *
+ *   Work per node: one scan for a unit clause, one scan for a pure literal, and
+ *   the assumeLiteral() simplification each walk every clause/literal once, plus
+ *   copying the formula before a branch -> c*(V + L) operations per node. Ignoring
+ *   the (only-ever-helpful) propagation, the worst case obeys the subtract-and-
+ *   conquer recurrence
+ *
+ *       T(V) = 2*T(V-1) + c*(V + L) ,   T(0) = c0*(V + L)   (empty/conflict check)
+ *
+ *   Unfold it as a recursion tree and sum the work per level:
+ *
+ *       level d      #nodes     vars left     work on the level
+ *       ---------    -------    ----------    ------------------------
+ *       d = 0        1          V             c*(V+L)
+ *       d = 1        2          V-1           2 * c*(V+L)
+ *       d = 2        4          V-2           4 * c*(V+L)
+ *       ...          ...        ...           ...
+ *       d = k        2^k        V-k           2^k * c*(V+L)
+ *
+ *       T(V) = SUM_{d=0}^{V} 2^d * c*(V+L)
+ *            = c*(V+L) * (2^(V+1) - 1)          (geometric series, ratio 2)
+ *            = O(2^V * (V + L))
+ *            = O(2^V)   (the polynomial per-node factor is lower order).
+ *   The size shrinks by SUBTRACTION (V -> V-1), not division, so the Master
+ *   Theorem does not apply; the level sum is dominated by its last term 2^V.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants), parameter V:
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(V) <= c2*g(V)  for V >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(V) <= f(V)         for V >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   DPLL is data-dependent (propagation / pure-literal pruning), so bounds are
+ *   PER-CASE:
+ *     BEST case   a forced chain (all unit / pure literals) or an immediate empty
+ *                 clause branches 0 times: <= V forced calls -> Theta(V*(V+L)),
+ *                 polynomial.
+ *     WORST case  no propagation ever fires (clauses keep >= 2 free literals until
+ *                 the last level) -> the full 2^V tree is built, Theta(2^V*(V+L)),
+ *                 i.e. Theta(2^V) up to the polynomial factor.
+ *   Over ALL inputs the time is thus O(2^V) (from the worst case) and Omega(V + L)
+ *   (must read the formula at least once); it is NOT a single Theta because
+ *   best != worst. The comparison-sort Omega(n log n) bound is irrelevant -- this
+ *   is a decision problem, not a sort. The relevant conditional lower bound is the
+ *   Exponential Time Hypothesis: no 2^(o(V)) algorithm for 3-SAT is known.
+ *
  * KEY POINTS:
  *   - Literal encoding: signed int, +v means "variable v is true", -v means
  *     "variable v is false" (variables numbered from 1). 0 is never a literal.

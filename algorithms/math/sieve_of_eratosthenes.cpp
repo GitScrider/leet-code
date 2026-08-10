@@ -21,6 +21,43 @@
  *   +---------------------+----------------------+
  *   Space: O(n) for the boolean / spf array.
  *
+ * Complexity derivation (Eratosthenes: harmonic-over-primes / Mertens):
+ *   Initialization and the outer scan touch each index once: O(n). The marking
+ *   cost dominates. The inner loop runs ONLY for a prime p, crossing out
+ *   p*p, p*p+p, ..., <= n, i.e. about (n - p*p)/p + 1 ~= n/p iterations. Only
+ *   primes p with p*p <= n (p <= sqrt(n)) ever enter the inner loop. Summing:
+ *
+ *       C(n) = SUM_{p prime, p <= sqrt(n)} (n / p)
+ *            = n * SUM_{p prime, p <= sqrt(n)} (1 / p).
+ *
+ *   Mertens' second theorem gives the sum of reciprocals of the primes:
+ *
+ *       SUM_{p prime, p <= x} (1 / p) = ln ln x + M + o(1)     (M ~= 0.2615)
+ *
+ *   With x = sqrt(n),  ln ln sqrt(n) = ln((ln n)/2) = ln ln n - ln 2, hence
+ *
+ *       C(n) = n * (ln ln n + O(1)) = O(n log log n).
+ *
+ *   Linear (SPF) sieve: the assignment spf[p*i] = p writes each COMPOSITE k in
+ *   [2, n] exactly once (the "if (p == spf[i]) break" stops i as soon as its own
+ *   smallest prime factor is reached), so the inner body runs once per composite:
+ *
+ *       C_lin(n) = (outer loop: n-1 iters) + (each composite <= n marked once)
+ *                = O(n) + O(n) = O(n).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Both sieves are OBLIVIOUS: the work depends only on n, never on the values,
+ *   so each case coincides and the bound is tight:
+ *     Eratosthenes:  C(n) = n*(ln ln n + O(1))  => Theta(n log log n).
+ *     Linear sieve:  C_lin(n) = Theta(n).
+ *   These are marking algorithms, not comparison sorts, so the Omega(n log n)
+ *   comparison lower bound does not apply -- indeed both n log log n and n beat
+ *   it, which is why sieving primes is faster than sorting could ever be.
+ *
  * Key points / assumptions:
  *   - "primes below N" here means primes strictly less than N.
  *   - Inner loop uses i*i <= n and steps by i; i*i is guarded with a 64-bit

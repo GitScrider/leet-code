@@ -29,6 +29,46 @@
  *   Dominated by the sort when maxDeadline = O(n); the DSU "find next free slot"
  *   makes the placement near-linear.
  *
+ * Complexity derivation (sort + amortized DSU slot assignment):
+ *   Let n = number of jobs and D = maxDeadline (number of unit-time slots).
+ *   PHASE 1 - sort by profit DESC. A comparison sort of n items costs
+ *       T_sort(n) = O(n log n)
+ *   (same recursion-tree summation as merge sort: log n levels * n work/level).
+ *   PHASE 2 - place each job in its latest free slot. Two variants:
+ *     (a) LINEAR-SCAN row O(n*maxDeadline): each job scans slots
+ *         deadline, deadline-1, ..., 1 for the first free one; worst case every
+ *         scan walks all D slots, so
+ *             C_scan = SUM_{j=1}^{n} (slots scanned by job j)
+ *                    <= SUM_{j=1}^{n} D  =  n*D  =  O(n * maxDeadline).
+ *     (b) DSU row O(n*alpha(n)) (what THIS file runs): each job performs exactly
+ *         ONE dsuFind(deadline) plus an O(1) relink parent[free]=free-1. A whole
+ *         sequence of n such find operations with path halving over a universe of
+ *         D+1 slots costs, by Tarjan's amortized union-find bound,
+ *             C_dsu = O((n + D) * alpha(D))  =  O(n * alpha(n))   when D = O(n),
+ *         where alpha is the inverse Ackermann function (alpha <= 4 in practice,
+ *         effectively constant). Slot-array init adds O(D).
+ *   TOTAL (DSU variant): T(n) = T_sort + O(D) + C_dsu
+ *                              = O(n log n) + O(D) + O(n*alpha(n))
+ *                              = O(n log n)      (sort dominates when D = O(n)).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here f(n) = c1*n*log n (sort) + c2*n*alpha(n) (placement); since alpha(n)
+ *   grows slower than log n, the sort term dominates. With g(n) = n log n:
+ *     upper  O:     f(n) <= 2c1*(n log n)  for n >= n0   => O(n log n)
+ *     lower  Omega: sorting n profits by comparisons needs Omega(n log n)
+ *                   (decision-tree bound) and runs on EVERY input => Omega(n log n)
+ *     tight  Theta: both hold  => Theta(n log n)  (assuming D = O(n)).
+ *   The sort is data-independent (all n jobs sorted every time), so best =
+ *   average = worst = Theta(n log n). The comparison lower bound Omega(n log n)
+ *   DOES apply because the dominant step genuinely is a comparison sort of the
+ *   profits; hashing cannot help since we need them in decreasing order. If
+ *   deadlines are sparse (D >> n) the O(D + n*alpha(D)) placement can dominate,
+ *   giving O(n log n + D).
+ *
  * Key points:
  *   - Sort key: profit DESC. Ties may be broken arbitrarily (any order is
  *     optimal), but we keep a stable order for reproducible output.

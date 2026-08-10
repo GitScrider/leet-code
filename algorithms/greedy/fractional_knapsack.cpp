@@ -31,6 +31,39 @@
  *   +-----------------------+------------------+
  *   Total: O(n log n), dominated by the sort.
  *
+ * Complexity derivation (sort + linear fill scan):
+ *   Two phases whose costs add. Let C(n) be the total work.
+ *     Phase 1 -- sort items by value density. std::sort (introsort) is a
+ *     comparison sort with a GUARANTEED O(n log n) worst case, performing
+ *     Theta(n log n) comparisons of the cross-multiplied ratios v_a*w_b vs
+ *     v_b*w_a.
+ *     Phase 2 -- one greedy fill scan. Each iteration does O(1) work (one
+ *     capacity test plus a constant-time whole-or-fraction update). The loop
+ *     may early-exit once the sack is full, so the scan alone costs
+ *         F(n) = SUM_{i=0}^{k-1} c1  =  c1 * k,   1 <= k <= n,
+ *     i.e. between O(1) (first item overflows) and O(n) (every item fits).
+ *   Adding the phases (using the worst-case k = n):
+ *         C(n) = (c*n*log2 n) + (c1*n) = O(n log n) + O(n) = O(n log n),
+ *   since n log n dominates n for n >= 2. The sort is the bottleneck; the
+ *   at-most-one fractional split is a single O(1) event, not a loop.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Even though the fill scan is adaptive (best Theta(1) via early break,
+ *   worst Theta(n)), it is always dominated by the mandatory density sort,
+ *   which fixes the order. A comparison sort must separate all n! permutations,
+ *   so its decision tree has >= n! leaves and height >= log2(n!) =
+ *   Theta(n log n) (Stirling): sorting is Omega(n log n), and introsort meets
+ *   it at O(n log n) -> Theta(n log n). Thus with g(n) = n log n:
+ *     upper  O:     C(n) <= c2 * (n log2 n)  for n >= 2  => O(n log n)
+ *     lower  Omega: C(n) >= c1 * (n log2 n)  for n >= 2  => Omega(n log n)
+ *     tight  Theta: both hold                            => Theta(n log n)
+ *   The overall bound is the SAME for best/average/worst -- the O(n) scan can
+ *   never overtake the Theta(n log n) sort -- so no per-case split is needed.
+ *
  * Key points:
  *   - Sort key is value/weight ratio, DESCENDING; comparing v_i * w_j vs
  *     v_j * w_i (cross-multiplication) avoids floating-point division in
