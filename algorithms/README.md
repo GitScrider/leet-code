@@ -142,6 +142,25 @@ counting/radix/bucket operate on integers.
 | Euler's totient | O(√n) / sieve | [euler_totient.cpp](math/euler_totient.cpp) |
 | Matrix exponentiation (fast Fibonacci) | O(log n) | [matrix_exponentiation.cpp](math/matrix_exponentiation.cpp) |
 
+## NP-Complete / NP-Hard
+
+Classic intractable problems: an **exact solver** (exponential / pseudo-polynomial /
+Held-Karp / meet-in-the-middle) for small instances, plus a well-known **approximation**
+where one exists. Each header explains why the problem is hard.
+
+| Problem | Class | Exact approach (+ approx) | File |
+|---|---|---|---|
+| SAT / 3-SAT | NP-complete | DPLL backtracking | [sat_3sat.cpp](np-complete/sat_3sat.cpp) |
+| Traveling salesman | NP-hard | Held-Karp O(2ⁿ·n²) + nearest-neighbor | [traveling_salesman.cpp](np-complete/traveling_salesman.cpp) |
+| Hamiltonian path/cycle | NP-complete | backtracking | [hamiltonian_path_cycle.cpp](np-complete/hamiltonian_path_cycle.cpp) |
+| Vertex cover | NP-complete | branching + 2-approximation | [vertex_cover.cpp](np-complete/vertex_cover.cpp) |
+| Maximum clique | NP-hard | Bron-Kerbosch | [max_clique.cpp](np-complete/max_clique.cpp) |
+| Maximum independent set | NP-hard | branching | [max_independent_set.cpp](np-complete/max_independent_set.cpp) |
+| Chromatic number | NP-hard | k-coloring search | [graph_coloring_chromatic.cpp](np-complete/graph_coloring_chromatic.cpp) |
+| Set cover | NP-hard | exact + greedy ln n-approx | [set_cover.cpp](np-complete/set_cover.cpp) |
+| Subset sum | NP-complete | meet-in-the-middle O(2^(n/2)) | [subset_sum_meet_in_middle.cpp](np-complete/subset_sum_meet_in_middle.cpp) |
+| Bin packing | NP-hard | exact + first-fit-decreasing | [bin_packing.cpp](np-complete/bin_packing.cpp) |
+
 ---
 
 *Part of a personal study repository for algorithms and design patterns.*
