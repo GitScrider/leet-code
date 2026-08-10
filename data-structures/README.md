@@ -33,6 +33,7 @@ g++ -std=c++17 -Wall -Wextra linear/dynamic_array.cpp -o demo && ./demo
 | Stack (LIFO) | push/pop/top amortized O(1) | [stack.cpp](linear/stack.cpp) |
 | Queue (FIFO, ring buffer) | enqueue/dequeue O(1) | [queue.cpp](linear/queue.cpp) |
 | Deque (ring buffer) | push/pop at both ends amortized O(1) | [deque.cpp](linear/deque.cpp) |
+| Circular Linked List | push/pop at both ends O(1), rotate O(k) | [circular_linked_list.cpp](linear/circular_linked_list.cpp) |
 
 ### Trees
 
@@ -55,9 +56,17 @@ g++ -std=c++17 -Wall -Wextra linear/dynamic_array.cpp -o demo && ./demo
 | Hash Table — open addressing (linear probing) | put/get/erase O(1) avg, O(n) worst | [hash_table_open_addressing.cpp](hashing/hash_table_open_addressing.cpp) |
 | Hash functions tour (djb2, FNV-1a, rolling, int mix) | hash O(L) | [hash_functions.cpp](hashing/hash_functions.cpp) |
 
+### Graphs
+
+| Structure | Key operations (Big-O) | File |
+|---|---|---|
+| Graph — adjacency list | addEdge O(1), BFS/DFS O(V+E), space O(V+E) | [graph_adjacency_list.cpp](graphs/graph_adjacency_list.cpp) |
+| Graph — adjacency matrix | hasEdge O(1), neighbors O(V), space O(V²) | [graph_adjacency_matrix.cpp](graphs/graph_adjacency_matrix.cpp) |
+| Union-Find (DSU) | find/unite ~O(α(n)) amortized | [union_find.cpp](graphs/union_find.cpp) |
+
 ### Coming next
 
-- **Graphs** — adjacency list/matrix, union-find (DSU)
+- **Algorithms** — see the top-level `algorithms/` folder (sorting, searching, graph algorithms, DP, …)
 
 ---
 
