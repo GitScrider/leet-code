@@ -40,6 +40,38 @@
  * A rolling variant can bring space to O(n), but the 2-D table is clearest and
  * is what we use here.
  *
+ * Complexity derivation (DP states * work-per-state, summation)
+ * -------------------------------------------------------------
+ *   The table has one entry dp[i][j] per interval with 0 <= i <= j < n, and the
+ *   fill is data-independent: every entry costs O(1) (one char compare plus a
+ *   single addition or a single max). Count the entries actually computed:
+ *     - base loop:   dp[i][i] for i = 0..n-1                    -> n entries
+ *     - length loop: for each len = 2..n the inner i-loop runs
+ *                    (n - len + 1) times (its valid start positions).
+ *   So the number of filled cells is
+ *
+ *       C(n) = n + SUM_{len=2}^{n} (n - len + 1)
+ *            = n + SUM_{k=1}^{n-1} k            (substitute k = n - len + 1)
+ *            = n + (n-1)*n/2                    (arithmetic series, Gauss)
+ *            = (n^2 + n) / 2
+ *            = O(n^2)
+ *   which is exactly the upper-triangle count n*(n+1)/2. Each cell is O(1), so
+ *   total time is Theta(n^2); the full n x n table gives O(n^2) space.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight)
+ * ------------------------------------------------------------
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here f(n) = (n^2 + n)/2 with g(n) = n^2:
+ *     upper  O:     f(n) <= 1*n^2       for n >= 1   => O(n^2)
+ *     lower  Omega: f(n) >= (1/2)*n^2   for n >= 1   => Omega(n^2)
+ *     tight  Theta: both hold (c1 = 1/2, c2 = 1)     => Theta(n^2)
+ *   The loop bounds depend only on n, never on the characters of s, so best,
+ *   average and worst case are the SAME Theta(n^2). This is an interval DP, not
+ *   a comparison sort, so the Omega(n log n) sorting lower bound does not apply.
+ *
  * Key points
  * ----------
  *  - Bottom-up by increasing substring length so dp[i+1][j-1] is ready first.

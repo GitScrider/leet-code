@@ -24,6 +24,41 @@
  *   | Space | O(V)             |   label array + BFS queue
  *   +-------+------------------+
  *
+ * Complexity derivation (each vertex + each edge touched O(1) times):
+ *   Two sources of work on V vertices and E edges (undirected adjacency list):
+ *   (1) OUTER SWEEP: the for-loop runs start = 0..V-1 doing O(1) per index (a
+ *       single label check), contributing O(V).
+ *   (2) BFS FLOOD FILLS: across ALL flood fills COMBINED a vertex is enqueued and
+ *       dequeued EXACTLY ONCE -- the comp[]!=UNLABELLED guard admits each vertex a
+ *       single time. When u is dequeued we scan its whole adjacency list, deg(u)
+ *       work. Summed over every vertex:
+ *           W = SUM_{u in V} (1 + deg(u))
+ *             = V + SUM_{u in V} deg(u)
+ *             = V + 2E        (handshake lemma: each undirected edge (a,b) sits in
+ *                              BOTH adj[a] and adj[b], so the degree sum counts
+ *                              every edge exactly twice)
+ *             = O(V + E).
+ *   Combining the sweep and the fills:
+ *           T(V,E) = O(V) + O(V + 2E) = O(V + E).
+ *   Every vertex and every edge is processed a constant number of times, so the
+ *   bound is data-INDEPENDENT (independent of how edges cluster into components):
+ *   best = average = worst.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; size = V + E):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f <= c2*g       for V+E >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f            for V+E >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The exact count is f(V,E) = c*(V + 2E) + c0*V. With g = V + E:
+ *     upper  O:     f <= (2c + c0)*(V + E)  for V+E >= 1  => T = O(V + E)
+ *     lower  Omega: f >=       c*(V + E)     for V+E >= 1  => T = Omega(V + E)
+ *     tight  Theta: both hold                             => T = Theta(V + E)
+ *   Because the algorithm must read the label of every vertex and traverse every
+ *   adjacency entry regardless of the graph's shape, the SAME Theta(V + E) is the
+ *   tight bound in the best, average AND worst case. (No comparison-sort
+ *   Omega(n log n) bound is relevant: this is a linear graph traversal, not a
+ *   sort -- nothing is ever compared or ordered.)
+ *
  * Key points / assumptions:
  *   - Graph is UNDIRECTED; store each edge (u,v) in BOTH adj[u] and adj[v].
  *   - Unweighted; weights are irrelevant to connectivity.

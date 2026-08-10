@@ -25,6 +25,39 @@
  *   (2E scans for an undirected graph). Space is the visited array plus the
  *   recursion/explicit stack, worst case O(V) deep (a path graph).
  *
+ * Complexity derivation (aggregate vertex + edge count):
+ *   dfsFull first marks/scans visited[] for all V vertices in its outer loop:
+ *   c0*V ops. A vertex u is DISCOVERED at most once: dfsRecursive sets
+ *   visited[u]=true on entry and is only ever called on an unvisited vertex, so
+ *   the total number of dfsRecursive invocations across all components is exactly
+ *   V. On the single call that owns u, the for loop scans every entry of adj[u],
+ *   i.e. deg(u) neighbors, each tested in O(1). Summing:
+ *
+ *       C(V,E) = c0*V + SUM_{u in V} (1 + deg(u))
+ *              = c0*V + V + SUM_{u in V} deg(u)
+ *              = c0*V + V + 2E     (undirected: SUM_{u} deg(u) = 2E)
+ *              = O(V + E)
+ *
+ *   The ITERATIVE variant may push a vertex several times, but it pops and
+ *   FINALIZES each at most once (the visited check at pop discards stale copies);
+ *   the number of pushes is bounded by the number of edge scans, SUM deg(u) = 2E,
+ *   so it is the same O(V + E). For a DIRECTED graph SUM out-deg(u) = E -> V + E.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants) on size n = V + E:
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   With f(V,E) = c0*V + V + 2E and g = V + E:
+ *     upper  O:     f <= (c0 + 3) * (V + E)              => O(V + E)
+ *     lower  Omega: f >=  1        * (V + E)             => Omega(V + E)
+ *     tight  Theta: both hold (c1 = 1, c2 = c0 + 3)      => Theta(V + E)
+ *   A full traversal touches every vertex once and every edge once regardless of
+ *   structure, so the running time is input-INDEPENDENT and Theta(V + E) is tight
+ *   for best, average and worst case. Only the AUXILIARY STACK depth is
+ *   data-dependent -- O(1) best (a star), O(V) worst (a path graph) -- and that
+ *   affects SPACE, not the O(V + E) time.
+ *
  * Key points / assumptions:
  *   - Works on directed or undirected graphs; the demo graph is undirected.
  *   - visited[] is essential: without it, any cycle would loop forever.

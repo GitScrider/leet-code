@@ -34,6 +34,44 @@
  *   puzzle is solved almost instantly despite the frightening upper bound.
  *   The 9x9 grid is fixed size, so the only growing memory is the O(m) stack.
  *
+ * Complexity derivation (state-space tree -> geometric summation):
+ *   Let m be the number of blank cells. Model the search as a tree whose level d
+ *   is the d-th blank filled. Each blank is tried with up to 9 digits, so the
+ *   branching factor is <= 9 and the tree depth is m. The number of solve()
+ *   nodes is the geometric series:
+ *
+ *       level d     #nodes (<=)     work per node
+ *       --------    -----------     -------------------------------------------
+ *       d = 0       1               find first blank (<= 81 cells) + 9 * isValid
+ *       d = 1       9               same, all O(1): grid is a fixed 9x9
+ *       d = 2       9^2             ...
+ *       ...         ...             ...
+ *       d = m       9^m (leaves)    O(1)
+ *
+ *       T(m) = SUM_{d=0}^{m} 9^d
+ *            = (9^(m+1) - 1) / (9 - 1)      (geometric series, ratio 9)
+ *            = (9^(m+1) - 1) / 8
+ *            = O(9^m)
+ *
+ *   Per-node work is O(1): the empty-cell scan touches <= 81 cells and each of
+ *   the <= 9 isValid calls scans 9 + 9 + 9 = 27 cells -- all constants because
+ *   the board never grows. Hence total time = O(9^m) * O(1) = O(9^m).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, m0 positive constants):
+ *     f(m) = O(g)      iff  EXISTS c2, m0 :       f(m) <= c2*g(m)  for m >= m0
+ *     f(m) = Omega(g)  iff  EXISTS c1, m0 :  c1*g(m) <= f(m)        for m >= m0
+ *     f(m) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The cost is DATA-DEPENDENT (it depends on the clues), so bounds are per-case:
+ *     WORST case  a near-empty / adversarial grid where pruning rarely fires:
+ *                 the tree approaches 9^m nodes  => time is O(9^m)  (upper).
+ *     BEST case   every blank has exactly one legal digit (forced), so the
+ *                 solver fills all m cells with no backtracking: Theta(m).
+ *   Over all inputs the running time is therefore O(9^m) (from the worst case)
+ *   and Omega(m) (from the best case); it is not a single Theta because best !=
+ *   worst. This is a constraint search, not a sort, so the comparison-sort
+ *   Omega(n log n) lower bound does not apply.
+ *
  * Key points / when to use:
  *   - Textbook exact-cover / constraint-satisfaction backtracking.
  *   - Constant-time validity checks keep each node of the search cheap.

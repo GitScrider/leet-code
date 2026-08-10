@@ -43,6 +43,43 @@
  *   Kadane keeps only the running "best ending here" plus the global best and a
  *   few indices, so O(1) extra space.
  *
+ * Complexity derivation (single-pass summation; nested loops for brute force):
+ *   Kadane makes ONE left-to-right pass. The loop runs for i = 1, 2, ..., n-1,
+ *   and each iteration does O(1) work (one compare to decide extend-vs-restart,
+ *   one add, and at most one snapshot of best):
+ *
+ *       C(n) = SUM_{i=1}^{n-1} c = c*(n - 1) = O(n)
+ *
+ *   Equivalently there are n DP states best_ending_here(0..n-1), each produced
+ *   once from its predecessor in O(1): n * O(1) = O(n). Only two scalars plus a
+ *   few indices are retained -> O(1) space.
+ *
+ *   Brute-force reference tries every [i, j] range via nested loops:
+ *
+ *       C(n) = SUM_{i=0}^{n-1} SUM_{j=i}^{n-1} 1
+ *            = SUM_{i=0}^{n-1} (n - i)
+ *            = n + (n-1) + ... + 2 + 1
+ *            = n*(n+1)/2                          (arithmetic series, Gauss)
+ *            = O(n^2)
+ *
+ *   Kadane's reuse of best_ending_here(i-1) drops that n^2 down to n.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Kadane's per-iteration work is input-INDEPENDENT: the pass always visits all
+ *   n elements once, so f(n) = c*(n-1) regardless of the values. With g(n) = n,
+ *     upper  O:     f(n) <= c*n       for n >= 1  => O(n)
+ *     lower  Omega: f(n) >= (c/2)*n   for n >= 2  => Omega(n)
+ *     tight  Theta: both hold                     => Theta(n)
+ *   Hence best = average = worst = Theta(n). Omega(n) is also unavoidable for ANY
+ *   correct algorithm: it must read all n entries (an unread entry could change
+ *   the answer). The comparison-sort Omega(n log n) bound is irrelevant here --
+ *   no sorting is performed; the work is integer add/compare over one scan. The
+ *   brute-force reference is Theta(n^2) by the same summation above.
+ *
  * Key points:
  *   - This is DP with the table collapsed to a single rolling scalar; there is
  *     no benefit to a full array here.

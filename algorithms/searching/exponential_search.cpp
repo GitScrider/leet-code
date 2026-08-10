@@ -25,6 +25,48 @@
  *   +----------+-----------+
  *   Auxiliary Space: O(1)  (iterative)
  *
+ * Complexity derivation (two phases: geometric doubling + binary search):
+ *   Let i be the index where the target sits (or would sit) in the sorted array.
+ *
+ *   Phase 1 (range-finding by doubling). The probed bounds form a GEOMETRIC
+ *   sequence 1, 2, 4, ..., 2^k, stopping at the first 2^k with a[2^k] >= target,
+ *   i.e. the first 2^k >= i. That threshold is k = ceil(log2 i). One comparison
+ *   is spent per term of the sequence:
+ *
+ *       C1(i) = SUM_{d=0}^{k} 1 = k + 1 = ceil(log2 i) + 1 = O(log i).
+ *
+ *   Phase 2 (binary search on the bracket). The surviving bracket is
+ *   [2^(k-1), 2^k], whose width is 2^k - 2^(k-1) = 2^(k-1) elements. Binary
+ *   search over w elements costs floor(log2 w) + 1 comparisons, so:
+ *
+ *       C2(i) = floor(log2( 2^(k-1) )) + 1 = (k - 1) + 1 = k = O(log i).
+ *
+ *   Adding the two phases:
+ *
+ *       C(i) = C1(i) + C2(i) = (k + 1) + k = 2k + 1 = 2*ceil(log2 i) + 1
+ *            = O(log i).
+ *
+ *   WORST case: the target is near the end, i ~ n-1 (and the bound is clamped to
+ *   n), so log i -> log n and C(n) = O(log n). BEST case: a[0] == target is the
+ *   explicit fast path, C = 1 = O(1).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The cost is parameterised by the target position i, so bounds are per case:
+ *     BEST  case  C = 1                    -> Theta(1)      (target at index 0).
+ *     TYPICAL     C(i) = 2*ceil(log2 i)+1  -> Theta(log i)  (position-dependent).
+ *     WORST case  i ~ n => C = O(log n)    -> Theta(log n)  (target near the end).
+ *   Taking g(n) = log n and the worst-case f(n) = 2*log2 n + O(1):
+ *     1 * log2 n <= f(n) <= 3 * log2 n  for n >= 2  =>  worst = Theta(log n).
+ *   Over ALL inputs the time is O(log n) (upper, worst case) and Omega(1) (lower,
+ *   best case). This is a comparison search on ALREADY-sorted data, so the
+ *   comparison-SORT lower bound Omega(n log n) does not apply; the search lower
+ *   bound Omega(log n) is met in the worst case and beaten (Theta(log i)) when
+ *   the target lies near the front.
+ *
  * Key points / when to use:
  *   - Faster than plain binary search when the target sits near the beginning,
  *     because the cost depends on i, not n.

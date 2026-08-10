@@ -27,6 +27,53 @@
  *   |           | matrix is O(V^2) input).                                 |
  *   +-----------+---------------------------------------------------------+
  *
+ * Complexity derivation (state-space tree: branching^depth * work/node):
+ *   The recursion fixes exactly one vertex per level, and at each vertex the
+ *   for-loop branches on the m possible colors. So the search space is an
+ *   m-ary tree of height V (levels d = 0, 1, ..., V), with a complete color
+ *   assignment sitting at each depth-V leaf. Count the NODES visited when no
+ *   pruning fires (the worst case) as a finite geometric series:
+ *
+ *       N = SUM_{d=0}^{V} m^d
+ *         = 1 + m + m^2 + ... + m^V
+ *         = (m^(V+1) - 1) / (m - 1)        (geometric series, ratio m >= 2)
+ *
+ *   For m >= 2 this is squeezed as  m^V <= N <= 2 * m^V, hence N = Theta(m^V):
+ *   the m^V leaves (the m^V candidate colorings) dominate the node count.
+ *   Local work per node: the loop tries up to m colors and each isSafe() scans
+ *   the length-V adjacency row -> O(m * V) per node. Multiplying gives the exact
+ *   worst-case operation count
+ *
+ *       C(V) = Theta(m^V) * O(m * V) = O(V * m^(V+1)),
+ *
+ *   and the reported O(m^V) keeps only the dominant EXPONENTIAL factor, absorbing
+ *   the polynomial m*V (standard for exponential / NP-complete bounds). The
+ *   isSafe() test can only DELETE subtrees, never add them, so pruning lowers the
+ *   real cost on most inputs but never raises this m^V ceiling.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   This search is INPUT-DEPENDENT (adaptive via isSafe pruning), so the bound is
+ *   stated PER CASE, with node visits as the basic operation:
+ *     WORST case  a graph with NO valid m-coloring (e.g. K4 with m=3 in the
+ *                 tests) forces every one of the m^V assignments to be refuted
+ *                 before returning false => Theta(m^V) node visits (equivalently
+ *                 Theta(V * m^V) once the O(V) isSafe scan per node is counted).
+ *     BEST case   when color 1 is always legal (e.g. the edgeless graph, or the
+ *                 leftmost root-to-leaf path just works) the recursion descends V
+ *                 levels with no backtracking, visiting V+1 nodes => Theta(V)
+ *                 (Theta(V^2) counting the isSafe scans).
+ *   Over ALL inputs the running time is therefore O(m^V) (upper bound, from the
+ *   worst case) and Omega(V) (lower bound, from the best case); it is NOT a single
+ *   Theta because best != worst -- that gap is exactly why pruning helps in
+ *   practice. Note m-coloring is NP-complete for m >= 3, so no polynomial
+ *   algorithm is known and the exponential ceiling is intrinsic, not an artifact
+ *   of this code. The comparison-sort Omega(n log n) lower bound is irrelevant
+ *   here: this is a decision/search over colorings, not a comparison sort.
+ *
  * Key points / when to use:
  *   - Canonical constraint-satisfaction backtracking (register allocation,
  *     timetabling, map coloring, frequency assignment all reduce to this).

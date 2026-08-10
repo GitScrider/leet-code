@@ -31,6 +31,35 @@
  *   | + reconstruction    | O(n) extra      | O(n) for the cut[] table        |
  *   +---------------------+-----------------+---------------------------------+
  *
+ * Complexity derivation (nested-loop / arithmetic-series summation):
+ *   rodCutting: the outer loop sets l = 1, 2, ..., n. For each l the inner loop
+ *   tries first-cut lengths c = 1, 2, ..., l -- exactly l iterations, each O(1)
+ *   work (one add + one max). Summing the inner cost over all l:
+ *
+ *       C(n) = SUM_{l=1}^{n} l
+ *            = 1 + 2 + ... + n
+ *            = n * (n + 1) / 2                      (arithmetic series, Gauss)
+ *            = (n^2 + n) / 2
+ *            = O(n^2)
+ *
+ *   The work is data-INDEPENDENT: the loops run identically regardless of prices.
+ *   Reconstruction peels pieces l -> l - cut[l] with cut[l] >= 1, so it runs at
+ *   most n iterations -> O(n) extra, dominated by the O(n^2) fill.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here f(n) = (n^2 + n)/2. Take g(n) = n^2:
+ *     upper  O:     f(n) <= n^2          for n >= 1  => O(n^2)
+ *     lower  Omega: f(n) >= (1/2) n^2    for n >= 1  => Omega(n^2)
+ *     tight  Theta: both hold (c1 = 1/2, c2 = 1)     => Theta(n^2)
+ *   Because the nested loops are input-independent, the SAME Theta(n^2) is the
+ *   tight bound for best, average AND worst case. The price array holds n+1
+ *   entries, so n is also the input SIZE: the bound is genuinely polynomial (not
+ *   merely pseudo-polynomial). No comparison-sort Omega(n log n) bound applies.
+ *
  * Key points:
  *   - Unbounded knapsack specialized to value == price[length]; the length loop
  *     is naturally ascending so pieces may repeat.

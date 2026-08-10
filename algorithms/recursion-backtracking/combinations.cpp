@@ -31,6 +31,41 @@
  *   so listing all combinations is inherently expensive for large n. The bound
  *   pruning avoids descending into branches that can never reach size k.
  *
+ * Complexity derivation (backtracking state-space tree):
+ *   Each node appends one value; a root-to-leaf path has length k (depth = k),
+ *   and each level branches over up to n candidates -- a NAIVE size bound is
+ *   n^k nodes. START-INDEX pruning makes every path strictly ascending, so each
+ *   distinct leaf is a distinct ascending k-subset: there are exactly C(n, k)
+ *   leaves. Count the total work two ways:
+ *
+ *     Leaf copies: each of the C(n,k) full combinations is copied to `out`, and
+ *       a combination holds k ints  ->  k * C(n, k).
+ *
+ *     Node visits: with BOUND pruning (last = n - needed + 1) we descend only
+ *       into nodes that can still reach a size-k leaf, so every visited node is
+ *       an ancestor of >= 1 leaf. Each leaf has exactly k ancestors, hence
+ *           #nodes <= SUM_{leaves} (#ancestors) = k * C(n, k),
+ *       and each node does O(1) choose/unchoose work -> O(k * C(n, k)).
+ *
+ *   Adding the two:  T(n,k) = O(k*C(n,k)) + O(k*C(n,k)) = O(k * C(n, k)).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The input is only the pair (n, k) -- there is no data to vary -- so the
+ *   count is fixed: exactly C(n,k) combinations, k*C(n,k) integers of output.
+ *   With g = k*C(n,k):
+ *     upper  O:     work <= c2 * k*C(n,k)          => O(k * C(n, k))
+ *     lower  Omega: emitting the output alone costs k*C(n,k) ints
+ *                                                  => Omega(k * C(n, k))
+ *     tight  Theta: both hold                      => Theta(k * C(n, k))
+ *   So best = worst here (no data-dependent branch). The Omega is inherent
+ *   (output size), not a property of this code; the comparison-sort Omega(n log
+ *   n) bound does not apply -- this enumerates, it does not sort. Note C(n,k)
+ *   itself is exponential near k = n/2 (~2^n / sqrt(n)).
+ *
  * Key points / when to use:
  *   - Use when you need every fixed-size selection: lottery tickets, choosing
  *     committees, generating candidate feature subsets of a given size.

@@ -35,6 +35,36 @@
  * Reconstruction requires the full table (or a re-derivation), so this file
  * keeps the O(m*n) table; the rolling-row trick only gives the length.
  *
+ * Complexity derivation (nested-loop double summation)
+ * ----------------------------------------------------
+ * lcsLength fills an (m+1) x (n+1) table. The outer loop runs i = 1..m and the
+ * inner loop runs j = 1..n; each cell does O(1) work (one char compare, then
+ * either a +1 or a std::max). Counting cell fills:
+ *
+ *     C(m, n) = SUM_{i=1}^{m} SUM_{j=1}^{n} 1
+ *             = SUM_{i=1}^{m} n
+ *             = m * n
+ *             = O(m * n)
+ *
+ * The fill is data-INDEPENDENT: both loops run fully whatever the characters.
+ * Reconstruction walks back from dp[m][n]; each step decrements i, j, or both,
+ * so it takes at most m + n steps -> O(m + n), dominated by the O(m*n) fill.
+ * Total: m*n + (m + n) = O(m * n).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight)
+ * -----------------------------------------------------------
+ * Formal definitions (c1, c2, N0 positive constants; problem SIZE N = m*n):
+ *   f = O(g)      iff  EXISTS c2, N0 :        f <= c2*g   for N >= N0
+ *   f = Omega(g)  iff  EXISTS c1, N0 :  c1*g <= f          for N >= N0
+ *   f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ * Here f = m*n + m + n. Take g = m*n:
+ *   upper  O:     f <= 3*(m*n)   for m,n >= 1  => O(m*n)
+ *   lower  Omega: f >=   (m*n)   for m,n >= 1  => Omega(m*n)
+ *   tight  Theta: both hold (c1 = 1, c2 = 3)   => Theta(m*n)
+ * The nested loops are input-independent, so the SAME Theta(m*n) is best =
+ * average = worst case. This is a tabulation DP, not a comparison sort, so the
+ * comparison-sort Omega(k log k) lower bound does not apply.
+ *
  * Key points
  * ----------
  *  - Bottom-up tabulation with a (m+1) x (n+1) table; row/col 0 are the base.

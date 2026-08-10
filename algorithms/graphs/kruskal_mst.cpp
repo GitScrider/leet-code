@@ -32,6 +32,40 @@
  *   +-----------+----------------------+
  *   Space: O(V + E)  (parent/rank arrays + the edge list)
  *
+ * Complexity derivation (sort dominates; DSU amortized alpha):
+ *   Two additive phases on V vertices and E edges.
+ *   (1) SORT the edge list by weight with a comparison sort. This is exactly the
+ *       merge/heap-sort cost on E items -- log2 E levels, E work per level:
+ *           S(E) = SUM_{d=0}^{log2 E} (c * E) = c*E*(log2 E + 1) = O(E log E).
+ *   (2) SCAN the E sorted edges. Per edge we call find() twice and, on an accept,
+ *       unite() once. With union by rank + path halving each DSU operation costs
+ *       O(alpha(V)) AMORTIZED (alpha = inverse Ackermann, <= 4 for any realistic
+ *       V). Total DSU work over the scan:
+ *           D(E) = SUM_{i=1}^{E} (2 finds + at most 1 unite) * O(alpha(V))
+ *                = O(E * alpha(V)).
+ *   Adding the phases:
+ *           T(V,E) = O(E log E) + O(E * alpha(V)) = O(E log E),
+ *   since alpha(V) grows slower than log E, so the SORT dominates. A simple graph
+ *   has E <= V*(V-1)/2 < V^2, hence log E < log(V^2) = 2*log V, giving the
+ *   equivalent form  T(V,E) = O(E log E) = O(E log V).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; "size" = E):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f(E) <= c2*g(E)  for E >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(E) <= f(E)        for E >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The comparison SORT is the tight cost. Sorting E edges is Theta(E log E) in
+ *   the comparison model: the Omega(n log n) decision-tree lower bound DOES apply
+ *   here because Kruskal orders edges by comparing weights. The DSU scan adds only
+ *   O(E * alpha(V)) = o(E log E). Therefore, with g(E) = E log E:
+ *     upper  O:     T(V,E) = O(E log E)      (sort + near-linear DSU scan)
+ *     lower  Omega: T(V,E) = Omega(E log E)  (every run must sort all E edges)
+ *     tight  Theta: T(V,E) = Theta(E log E) = Theta(E log V) on a simple graph.
+ *   The bound is data-INDEPENDENT: the sort touches all E edges and the scan
+ *   visits them regardless of weights, so best = average = worst = Theta(E log E).
+ *   (The early break after V-1 accepted edges shortens only the O(E) scan, never
+ *   the dominating sort.)
+ *
  * Key points / assumptions:
  *   - Graph is UNDIRECTED and weighted; each undirected edge is stored once.
  *   - Weights may be negative; Kruskal only relies on relative ordering.

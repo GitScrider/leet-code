@@ -27,6 +27,65 @@
  *   +----------+-----------+
  *   Auxiliary Space: O(1)  (iterative)
  *
+ * Complexity derivation (slope binary search: recurrence -> recursion tree):
+ *   Let T(n) count the basic operations for a candidate range holding n indices.
+ *   Each loop turn does O(1) work (one midpoint, one comparison a[mid] vs
+ *   a[mid+1]) and then keeps exactly one half of the range: either lo = mid+1
+ *   (drops the closed left part [lo, mid]) or hi = mid (drops the open right part
+ *   (mid, hi]). Because mid = lo + (hi-lo)/2, each surviving half holds at most
+ *   ceil(n/2) indices. This gives the recurrence:
+ *
+ *       T(n) = T(n/2) + c ,      T(1) = c0        (base: lo == hi, loop ends)
+ *
+ *   Unfold it as a recursion tree -- a single chain, no branching:
+ *
+ *       level d      #nodes      size each        work on the level
+ *       ---------    --------    -------------    -----------------
+ *       d = 0        1           n                c
+ *       d = 1        1           n/2              c
+ *       d = 2        1           n/4              c
+ *       d = k        1           n/2^k            c
+ *
+ *   The chain ends when n/2^k = 1, i.e. k = log2 n, so there are (log2 n + 1)
+ *   levels each costing c:
+ *
+ *       T(n) = SUM_{d=0}^{log2 n} c = c*(log2 n + 1) = O(log n).
+ *
+ *   Master Theorem check (a=1, b=2, f(n)=c): n^(log_b a) = n^(log2 1) = n^0 = 1,
+ *   same order as f(n)=c -> case 2 -> T(n) = Theta(n^0 * log n) = Theta(log n).
+ *   There is NO data-dependent early exit -- the loop always runs down to
+ *   lo == hi. But the two branches do NOT shrink the range equally: from a range
+ *   of w indices, hi = mid keeps ceil(w/2) indices while lo = mid+1 keeps only
+ *   floor(w/2), and these differ by 1 whenever w is odd. So the EXACT iteration
+ *   count is data-dependent, ranging from floor(log2 n) (whenever the faster
+ *   floor(w/2) shrink is taken every step) up to ceil(log2 n) (the slower
+ *   ceil(w/2) every step); the two coincide only when n is a power of 2. Example:
+ *   n = 3 takes 1 iteration if a[1] < a[2] (lo jumps straight to hi) but 2
+ *   iterations otherwise -- floor(log2 3) = 1, ceil(log2 3) = 2. Either way the
+ *   count is log2 n +/- O(1), so T(n) = Theta(log n) is unaffected. The O(1)
+ *   "best" row is only the degenerate n = 1 case, where lo == hi and the loop body
+ *   never runs.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here the loop runs I(n) times with floor(log2 n) <= I(n) <= ceil(log2 n) (see
+ *   above: only a +/- 1 wobble set by which branches are taken, never a change of
+ *   order), so f(n) = c*I(n) + c0. Using floor(log2 n) >= (1/2)*log2 n and
+ *   ceil(log2 n) <= log2 n + 1 for n >= 2, with g(n) = log n:
+ *     upper  O:     f(n) <= (2c + c0) * log2 n  for n >= 2  => O(log n)
+ *     lower  Omega: f(n) >=  (c/2)    * log2 n  for n >= 2  => Omega(log n)
+ *     tight  Theta: both hold (c1 = c/2, c2 = 2c + c0)      => Theta(log n)
+ *   The SAME Theta(log n) is thus the tight bound for best, average AND worst on
+ *   any array of size n >= 2 (the +/- 1 iteration wobble stays well inside this
+ *   Theta; the O(1) row is only the n = 1 input). This is a
+ *   comparison search, not a sort, so the sorting bound Omega(n log n) does not
+ *   apply; it even beats the Omega(n) that locating a specific VALUE in UNSORTED
+ *   data would need, because inspecting the local SLOPE (not the values) lets
+ *   each comparison prune half of the remaining indices.
+ *
  * Key points / when to use:
  *   - Any peak is acceptable; this is NOT about the global maximum.
  *   - Works on unsorted data because only the local slope is inspected.

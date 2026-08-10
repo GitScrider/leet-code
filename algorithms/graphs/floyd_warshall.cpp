@@ -22,6 +22,38 @@
  *   | Space  | O(V^2)    |   the distance matrix
  *   +--------+-----------+
  *
+ * Complexity derivation (dynamic program; triple loop over vertices):
+ *   The DP has one layer per allowed intermediate vertex k = 0..V-1. Each layer
+ *   recomputes the whole V x V distance matrix, i.e. V^2 states dist[i][j], and
+ *   every state costs O(1) (one add, one comparison, one guarded assignment).
+ *   Counting the three nested loops directly:
+ *
+ *       C(V) = SUM_{k=0}^{V-1} SUM_{i=0}^{V-1} SUM_{j=0}^{V-1} O(1)
+ *            = SUM_{k=0}^{V-1} SUM_{i=0}^{V-1} V
+ *            = SUM_{k=0}^{V-1} V^2
+ *            = V * V^2
+ *            = V^3
+ *            = O(V^3)
+ *
+ *   Equivalently: V DP layers * V^2 states per layer * O(1) per transition = V^3.
+ *   The INF guards can only SKIP an update, never add one, so they trim a
+ *   constant/lower-order factor on sparse graphs but never change the order; the
+ *   two outer loops always execute V^2 guard checks regardless of the data.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; g(V) = V^3):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(V) <= c2*g(V)   for V >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(V) <= f(V)         for V >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The triple loop is bounded by V per level, so f(V) <= V^3 for EVERY input
+ *   => T = O(V^3). In the dense case (no INF entries) every guard passes and all
+ *   V^3 inner updates run, so f(V) = V^3 => T = Omega(V^3) and hence Theta(V^3),
+ *   tight with c1 = c2 = 1. The outer two loops alone force Omega(V^2) on any
+ *   input; for the standard (dense / worst) case the bound is a single Theta(V^3)
+ *   because the work is essentially input-independent. Being a DP over a fixed
+ *   V^3 cube of subproblems, not a comparison sort, the Omega(n log n) sorting
+ *   lower bound does not apply.
+ *
  * Key points / assumptions:
  *   - Works on directed OR undirected graphs; handles negative edges.
  *   - Must NOT contain a negative cycle for distances to be meaningful. Such a

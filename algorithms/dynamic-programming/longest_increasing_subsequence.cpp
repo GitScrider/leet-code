@@ -39,6 +39,54 @@
  *   | Patience (n log n)| O(n log n)   | O(n)      |
  *   +-------------------+--------------+-----------+
  *
+ * Complexity derivation (nested-loop summation and per-search log cost)
+ * --------------------------------------------------------------------
+ *   Method (1), O(n^2) DP.  The outer loop runs i = 0..n-1; for each i the inner
+ *   loop runs j = 0..i-1, i.e. exactly i iterations of O(1) work (one compare and
+ *   a possible dp[]/parent[] update). Counting inner-body executions:
+ *
+ *       C(n) = SUM_{i=0}^{n-1} i
+ *            = 0 + 1 + 2 + ... + (n-1)
+ *            = (n-1) * n / 2                        (arithmetic series, Gauss)
+ *            = (n^2 - n) / 2
+ *            = O(n^2)
+ *
+ *   Reconstruction walks parent[] back from bestEnd at most n times => O(n),
+ *   dominated by the O(n^2) fill. The loop trip counts do NOT depend on the
+ *   values, so the work is identical for every input of size n.
+ *
+ *   Method (2), O(n log n) patience.  Each of the n values triggers one
+ *   std::lower_bound over the tails array, whose length is at most i+1 <= n at
+ *   step i, so one binary search costs c*log2(size) <= c*log2 n. The append or
+ *   in-place replace is O(1). Summing over the n elements:
+ *
+ *       C(n) = SUM_{i=0}^{n-1} c*log2(size_i)
+ *            <= SUM_{i=0}^{n-1} c*log2 n
+ *            = c * n * log2 n
+ *            = O(n log n)
+ *
+ *   On strictly increasing input, size_i = i, giving the tight count
+ *   SUM_{i=1}^{n} log2 i = log2(n!) = Theta(n log n) by Stirling -- so the bound
+ *   is actually attained, not just an upper estimate.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight)
+ * ------------------------------------------------------------
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Method (1): the double loop runs (n^2 - n)/2 times for EVERY input (the value
+ *   test changes only whether dp[i] updates, never the trip count). With g = n^2,
+ *   (1/4)n^2 <= C(n) <= (1/2)n^2 for n >= 2  =>  Theta(n^2); best = avg = worst.
+ *   Method (2): the cost is data-dependent. BEST case (strictly DECREASING input)
+ *   keeps |tails| = 1, so every search is O(1) => Theta(n). WORST case (strictly
+ *   INCREASING) grows |tails| to n => Theta(n log n). Hence over all inputs the
+ *   fast method is O(n log n) (upper, from the worst case) and Omega(n) (lower,
+ *   from the best case), not a single Theta.
+ *   Note: LIS is not a sorting problem, so the comparison-sort Omega(n log n)
+ *   lower bound does NOT bind LIS itself; method (2) merely reaches n log n on
+ *   its own worst case through the per-element binary searches.
+ *
  * Key points
  * ----------
  *  - Bottom-up DP is the intuitive version and reconstructs a concrete LIS.

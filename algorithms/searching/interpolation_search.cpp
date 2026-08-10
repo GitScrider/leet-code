@@ -26,6 +26,51 @@
  *   +----------+---------------+
  *   Auxiliary Space: O(1)  (iterative, a few index variables)
  *
+ * Complexity derivation (probe-count recurrence, uniform-key model):
+ *   Let R(n) be the expected number of PROBES to search n keys drawn uniformly
+ *   at random from [a[lo], a[hi]]. A classic result for such data is that after
+ *   ONE interpolation probe the expected number of keys still bracketed drops
+ *   from n to about sqrt(n) (the probe's positional error has standard deviation
+ *   ~sqrt(n)). This yields the recurrence:
+ *
+ *       R(n) = 1 + R(sqrt(n)) ,      R(2) = O(1)     (base: 1-2 keys left)
+ *
+ *   Track the surviving bracket size after each probe:
+ *
+ *       probe d      surviving size
+ *       ---------    --------------------
+ *       d = 0        n            = n^(1/2^0)
+ *       d = 1        sqrt(n)      = n^(1/2^1)
+ *       d = 2        n^(1/4)      = n^(1/2^2)
+ *       d = k        n^(1/2^k)
+ *
+ *   The search bottoms out when the size falls to a constant (2):
+ *       n^(1/2^k) = 2  <=>  (1/2^k) * log2 n = 1  <=>  2^k = log2 n
+ *                      <=>  k = log2(log2 n).
+ *   So R(n) = k + O(1) = O(log log n) probes, each O(1) arithmetic + 1 compare.
+ *
+ *   WORST case (skewed / clustered keys): a probe can eliminate as few as ONE
+ *   element, so the bracket shrinks by 1 per step and
+ *       C_worst(n) = SUM_{i=0}^{n-1} 1 = n = O(n).
+ *   BEST case: the very first probe lands on the target -> C_best(n) = 1 = O(1).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The cost is strongly DATA-DEPENDENT, so bounds are stated per case:
+ *     BEST  case  C(n) = 1                   -> Theta(1).
+ *     AVG   case  R(n) = log2(log2 n) + O(1) -> Theta(log log n) under the
+ *                 uniform model (c1*log log n <= R(n) <= c2*log log n, n >= 4).
+ *     WORST case  C(n) = n                   -> Theta(n) on adversarial/skewed data.
+ *   Over ALL inputs the running time is therefore O(n) (upper bound, worst case)
+ *   and Omega(1) (lower bound, best case); there is no single Theta across all
+ *   inputs because best, average and worst differ. Interpolation search is NOT a
+ *   comparison sort, so the sorting lower bound Omega(n log n) is irrelevant, and
+ *   the log log n average even beats binary search's log n precisely by doing
+ *   ARITHMETIC on key VALUES rather than relying on comparisons alone.
+ *
  * Key points / when to use:
  *   - Beats binary search's O(log n) ONLY when keys are roughly uniform; on
  *     skewed data every probe barely advances and it degrades to O(n).

@@ -30,6 +30,48 @@
  *   +-----------+----------+----------+----------+
  *   (Best case: the target happens to be at the first probed mid.)
  *
+ * Complexity derivation (recurrence -> iteration table -> summation):
+ *   Each while-iteration computes one mid, does a constant number of key
+ *   comparisons, then DISCARDS one side of the split. Whichever branch runs,
+ *   the surviving range [lo..hi] loses either [lo..mid] or [mid..hi], so a range
+ *   of n = hi-lo+1 elements shrinks to at most floor(n/2). Let T(n) count the
+ *   probes on a range of size n:
+ *
+ *       T(n) = T(n/2) + c ,        T(1) = c0        (base case: one probe)
+ *
+ *   Unfold this single-branch recursion as an iteration table (range size only):
+ *
+ *       iteration k    surviving size      work on the step
+ *       -----------    ----------------    ----------------
+ *       k = 0          n                   c
+ *       k = 1          <= n/2              c
+ *       k = 2          <= n/4              c
+ *       ...            ...                 ...
+ *       k = K          <= n/2^K            c
+ *
+ *   The loop stops once the range holds a single element, i.e. n/2^K <= 1, giving
+ *   K = floor(log2 n). Summing the constant work over all steps:
+ *
+ *       T(n) = SUM_{k=0}^{log2 n} c = c*(log2 n + 1) = O(log n)
+ *
+ *   Master Theorem (a=1, b=2, f(n)=c=Theta(1)): n^(log_b a) = n^(log2 1) = n^0
+ *   = 1, the same order as f(n) -> case 2 -> T(n) = Theta(n^0 * log n)
+ *   = Theta(log n). Best case: target equals a[mid] on the FIRST probe -> exactly
+ *   1 step -> O(1).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The probe count is data-dependent, so the bound is PER CASE:
+ *     WORST/AVERAGE  T(n) = c*(log2 n + 1) with g = log n: (c/2)*log2 n <= T(n)
+ *                    <= 2c*log2 n for n >= 2  =>  Theta(log n) (tight).
+ *     BEST case      target hits the first mid -> T(n) = c  =>  Theta(1) (tight).
+ *   Over ALL inputs the running time is therefore O(log n) (upper, from the worst
+ *   case) and Omega(1) (lower, from the best case), not a single Theta -- which is
+ *   exactly why the table splits Best from Average/Worst.
+ *
  * Key points / when to use:
  *   - Requires a range that is sorted ascending then rotated, with NO duplicates
  *     (duplicates break the "one half is sorted" test and degrade to O(n)).

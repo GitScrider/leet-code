@@ -17,6 +17,38 @@
  *   +-----------+----------+----------+----------+
  *   Best case: target sits at index 0. Worst case: target absent or last.
  *
+ * Complexity derivation (instruction count / summation):
+ *   The loop performs exactly ONE comparison (data[i] == target) per step and
+ *   returns on the first match. Let the target first appear at 0-based position
+ *   p (treat p = n-1 as the final slot when absent, since the scan still visits
+ *   every element). The number of comparisons is then:
+ *
+ *       C(n) = SUM_{i=0}^{p} 1 = p + 1            (steps 0, 1, ..., p inclusive)
+ *
+ *   BEST case (target at index 0, p = 0):
+ *       C(n) = SUM_{i=0}^{0} 1 = 1                => O(1)
+ *   WORST case (target absent or at the last slot, the scan reaches i = n-1):
+ *       C(n) = SUM_{i=0}^{n-1} 1 = n              => O(n)
+ *   AVERAGE case (present, position uniform over 0..n-1, Pr = 1/n each):
+ *       C(n) = SUM_{p=0}^{n-1} (p + 1) / n = (1/n) * n(n+1)/2 = (n+1)/2 = O(n)
+ *   The sentinel variant drops the per-step bounds test but still runs the same
+ *   ~n match comparisons, so the asymptotic order is unchanged.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Linear search is data-dependent (it returns early on a hit), so the tight
+ *   bound depends on the case:
+ *     BEST case   C(n) = 1  =>  Theta(1)   (target at the front)
+ *     WORST case  C(n) = n  =>  Theta(n)   (absent or last; with g = n we get
+ *                 1*n <= C(n) = n <= 1*n, so n is tight with c1 = c2 = 1)
+ *   Over ALL inputs the running time is O(n) (upper bound, from the worst case)
+ *   and Omega(1) (lower bound, from the best case); it is NOT a single Theta
+ *   because best != worst. No sortedness is assumed, so no ordering-based
+ *   speedup (e.g. the Omega(log n) sorted-search floor) can apply here.
+ *
  * Key points / when to use:
  *   - Use when the data is unsorted, tiny, or searched only once (sorting first
  *     would not pay off).

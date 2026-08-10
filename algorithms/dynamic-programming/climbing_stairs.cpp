@@ -39,6 +39,52 @@
  *   The rolling-variable version keeps only the last two results, which is all
  *   the recurrence ever reads.
  *
+ * Complexity derivation (DP states * O(1) work per state; recurrence for naive):
+ *   Memoization / tabulation / rolling: the table dp[0..n] holds (n+1) states,
+ *   each computed EXACTLY ONCE via dp[i] = dp[i-1] + dp[i-2], an O(1) transition.
+ *   The bottom-up loop runs for i = 2, 3, ..., n, one addition per iteration:
+ *
+ *       C(n) = SUM_{i=2}^{n} 1 = (n - 1) = O(n)
+ *
+ *   so total work = (n+1) states * O(1) = O(n). The rolling version does the SAME
+ *   n-1 additions but stores only two scalars -> O(1) space.
+ *
+ *   Naive recursion has NO cache, so its call count T(n) obeys the recurrence
+ *
+ *       T(n) = T(n-1) + T(n-2) + c ,     T(0) = T(1) = c0      (base case)
+ *
+ *   which is the Fibonacci recurrence. Bounding the binary recursion tree:
+ *
+ *       level d      #nodes         note
+ *       ---------    -----------    ------------------------------------------
+ *       d = 0        1              the root call climbNaive(n)
+ *       d = 1        2              the two calls climbNaive(n-1), climbNaive(n-2)
+ *       d           <= 2^d          each node spawns at most 2 children
+ *       leaves       Fib(n+1)       recursion bottoms out at n = 0 or n = 1
+ *
+ *   The number of leaves is Fib(n+1) ~ phi^n / sqrt(5); solving the recurrence via
+ *   x^2 = x + 1 gives the dominant root phi = (1+sqrt5)/2 ~ 1.618, hence
+ *
+ *       T(n) = Theta(phi^n)      (loosely bounded above by O(2^n))
+ *
+ *   Caching each of the n+1 subproblems once is exactly what collapses phi^n -> n.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The DP versions do work that depends ONLY on n (no data-dependent branch):
+ *   the loop always runs n-1 times, so f(n) = c*(n-1) + O(1). With g(n) = n,
+ *     upper  O:     f(n) <= 2c*n     for n >= 1   => O(n)
+ *     lower  Omega: f(n) >= (c/2)*n  for n >= 2   => Omega(n)
+ *     tight  Theta: both hold                     => Theta(n)
+ *   so best = average = worst = Theta(n). Omega(n) is also a hard floor: any
+ *   method must produce dp[n], whose value depends on all n steps. The naive
+ *   recursion, likewise shape-determined by n alone, is Theta(phi^n). No
+ *   comparison-sort Omega(n log n) bound applies -- this counts paths via integer
+ *   additions, it is not a comparison sort.
+ *
  * Key points:
  *   - Top-down (memoization) vs bottom-up (tabulation) compute the SAME table;
  *     bottom-up avoids recursion overhead and is the natural home for the O(1)

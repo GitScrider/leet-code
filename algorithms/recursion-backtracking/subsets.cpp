@@ -31,6 +31,50 @@
  *   list them faster than that. Duplicate pruning only removes redundant work,
  *   it does not change the asymptotic class for distinct input.
  *
+ * Complexity derivation (include/exclude recursion tree -> summation):
+ *   Version 1 makes a binary choice per element. Let A(m) count the nodes in
+ *   the recursion subtree when m elements remain to decide:
+ *
+ *       A(0) = 1              (a leaf: one completed subset)
+ *       A(m) = 1 + 2*A(m-1)   (this node + EXCLUDE subtree + INCLUDE subtree)
+ *
+ *   Unfolding gives A(m) = 2^(m+1) - 1, so the full tree has A(n) = 2^(n+1) - 1
+ *   nodes and exactly 2^n leaves (one per subset). Tally the work by level:
+ *
+ *       level d     #nodes       work per node          work on the level
+ *       --------    ---------    --------------------   ------------------
+ *       d = 0       2^0 = 1      O(1) choose/dispatch   1
+ *       d = 1       2^1 = 2      O(1)                   2
+ *       ...         ...          ...                    ...
+ *       d = n-1     2^(n-1)      O(1)                   2^(n-1)
+ *       d = n       2^n leaves   O(n) copy `current`    n * 2^n
+ *
+ *   Internal work = SUM_{d=0}^{n-1} 2^d = 2^n - 1 = O(2^n) (geometric series).
+ *   Leaf work     = 2^n * O(n) = O(n * 2^n)  (each of the 2^n subsets is copied
+ *   out, and a subset holds up to n ints). Adding the two:
+ *
+ *       T(n) = (2^n - 1) + n*2^n = O(n * 2^n)
+ *
+ *   Version 2 (start-index) copies `current` at EVERY node, but the node count
+ *   still equals the number of subsets (2^n distinct), so it is also O(n * 2^n).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   For DISTINCT input the count is input-independent: there are always exactly
+ *   2^n subsets whose sizes sum to SUM_{k=0}^{n} k*C(n,k) = n*2^(n-1) integers.
+ *   With g(n) = n*2^n and f(n) = n*2^(n-1) + O(2^n):
+ *     upper  O:     f(n) <= 1 * (n*2^n)      for n >= 1  => O(n * 2^n)
+ *     lower  Omega: f(n) >= (1/2)*(n*2^n)    for n >= 1  => Omega(n * 2^n)
+ *     tight  Theta: both hold                            => Theta(n * 2^n)
+ *   The Omega is an OUTPUT lower bound (any method must emit n*2^(n-1) ints), so
+ *   it is inherent, not an artifact of this code. This is enumeration, not
+ *   sorting, so the comparison-sort Omega(n log n) bound is irrelevant here.
+ *   With duplicate input the distinct count shrinks, so the running time is only
+ *   O(n * 2^n) (the pruned tree can be far smaller).
+ *
  * Key points / when to use:
  *   - Use when you must ENUMERATE all subsets (feature selection, bitmask DP
  *     seeds, brute-force search over combinations of options).

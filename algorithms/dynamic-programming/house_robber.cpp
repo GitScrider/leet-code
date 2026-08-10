@@ -39,6 +39,39 @@
  *   The recurrence only ever reads dp[i-1] and dp[i-2], so two rolling variables
  *   suffice and the full dp[] array is optional.
  *
+ * Complexity derivation (DP states * O(1) transition; brute force for contrast):
+ *   Tabulation fills dp[0..n-1]: two O(1) base cases, then the loop runs for
+ *   i = 2, 3, ..., n-1, each iteration doing one max and one add = O(1):
+ *
+ *       C(n) = SUM_{i=2}^{n-1} c = c*(n - 2) = O(n)
+ *
+ *   So there are n DP states, each produced once with an O(1) transition:
+ *   n * O(1) = O(n). The rolling version performs the SAME n-2 transitions but
+ *   keeps only prev1, prev2 -> O(1) space instead of the O(n) dp[] array.
+ *
+ *   The brute-force reference enumerates all 2^n subsets (bitmasks) and spends
+ *   O(n) validating and summing each mask:
+ *
+ *       C(n) = SUM_{mask=0}^{2^n - 1} O(n) = O(n * 2^n) = O(2^n)
+ *
+ *   Optimal substructure lets the DP replace that exponential search with a
+ *   single linear sweep.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The step count depends ONLY on n, not on the amounts: max() picks a branch but
+ *   never changes how many iterations run, so f(n) = c*(n-2) + O(1). With g(n)=n,
+ *     upper  O:     f(n) <= c*n      for n >= 2  => O(n)
+ *     lower  Omega: f(n) >= (c/2)*n  for n >= 4  => Omega(n)
+ *     tight  Theta: both hold                    => Theta(n)
+ *   Therefore best = average = worst = Theta(n); Omega(n) is also a hard floor
+ *   since every house must be examined at least once. This is not a comparison
+ *   sort, so the Omega(n log n) sorting bound does not apply. The brute-force
+ *   reference is Theta(2^n), exponentially worse than the DP.
+ *
  * Key points:
  *   - Bottom-up here is the clearer formulation; the O(1) version simply keeps
  *     the last two dp values. A top-down memoization would give the same table.

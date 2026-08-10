@@ -28,6 +28,43 @@
  *   WHY exponential: T(n) = 2^n - 1 grows doubling with each added disk;
  *   there is no pruning to apply because every one of those moves is required.
  *
+ * Complexity derivation (recurrence -> recursion tree -> geometric sum):
+ *   Let T(n) be the number of disk moves emitted (one push_back per move). The
+ *   body makes two recursive calls on n-1 plus one direct move, giving
+ *
+ *       T(n) = 2 * T(n-1) + 1 ,      T(0) = 0        (base case: no disks)
+ *
+ *   Unfold as a recursion tree; each node contributes its ONE direct move:
+ *
+ *       level d      #nodes      subproblem size     work on the level
+ *       ---------    --------    ----------------    -----------------
+ *       d = 0        1 = 2^0     n                   2^0 = 1
+ *       d = 1        2 = 2^1     n-1                 2^1 = 2
+ *       d = 2        4 = 2^2     n-2                 2^2 = 4
+ *       ...          ...         ...                 ...
+ *       d = k        2^k         n-k                 2^k
+ *
+ *   Nodes at depth d = n hit the base case (size 0) and do no work, so the
+ *   moves come from levels d = 0 .. n-1. Summing the geometric series:
+ *
+ *       T(n) = SUM_{d=0}^{n-1} 2^d = (2^n - 1)/(2 - 1) = 2^n - 1 = O(2^n).
+ *
+ *   (Subtract-and-conquer Master form T(n) = a*T(n-b) + f(n) with a=2, b=1,
+ *   f=O(1) and a > 1 likewise gives Theta(a^(n/b)) = Theta(2^n).)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Definitions (c1, c2, n0 positive constants):
+ *     f = O(g)     iff EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g) iff EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g) iff f = O(g) AND f = Omega(g)
+ *   Here f(n) = 2^n - 1 EXACTLY, dependent on nothing but n. Take g = 2^n:
+ *     upper  O:     2^n - 1 <= 1 * 2^n           for n >= 0  => O(2^n)
+ *     lower  Omega: 2^n - 1 >= (1/2) * 2^n       for n >= 1  => Omega(2^n)
+ *     tight  Theta: both hold (c1 = 1/2, c2 = 1)             => Theta(2^n)
+ *   The count is exact and data-independent, so best = average = worst =
+ *   Theta(2^n); moreover 2^n - 1 is a PROVEN lower bound over ALL legal solving
+ *   strategies -- the exponential cost is intrinsic, not implementation slack.
+ *
  * Key points / when to use:
  *   - The textbook example of a problem whose recursion tree size equals the
  *     answer itself: work is inherently exponential, not an inefficiency.

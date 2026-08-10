@@ -22,6 +22,39 @@
  *   scanned once (O(E), or 2E for an undirected graph). Space is the queue plus
  *   the visited/dist/parent arrays, all O(V).
  *
+ * Complexity derivation (aggregate vertex + edge count over the BFS loop):
+ *   Initialization assigns dist/parent/visited for all V vertices: c0*V ops.
+ *   The outer while loop dequeues each vertex AT MOST ONCE, because a vertex is
+ *   marked visited the instant it is enqueued and only unvisited vertices are
+ *   ever pushed; hence the body runs once per reachable vertex, <= V times.
+ *   When u is dequeued its inner for loop scans exactly deg(u) adjacency entries,
+ *   each handled in O(1). Summing the per-vertex work over all dequeued vertices:
+ *
+ *       C(V,E) = c0*V + SUM_{u dequeued} (1 + deg(u))
+ *              = c0*V + V + SUM_{u in V} deg(u)
+ *              = c0*V + V + 2E     (undirected: each edge is seen from BOTH
+ *                                   endpoints, so SUM_{u} deg(u) = 2E)
+ *              = O(V + E)
+ *
+ *   For a DIRECTED graph SUM_{u} out-deg(u) = E, giving c0*V + V + E; either way
+ *   the order is O(V + E). No vertex is dequeued twice and no adjacency entry is
+ *   scanned twice, so the operation count is exact (not just an upper bound).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants) on size n = V + E:
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here f(V,E) = c0*V + V + 2E is linear in V + E; take g = V + E:
+ *     upper  O:     f <= (c0 + 3) * (V + E)              => O(V + E)
+ *     lower  Omega: f >=  1        * (V + E)             => Omega(V + E)
+ *     tight  Theta: both hold (c1 = 1, c2 = c0 + 3)      => Theta(V + E)
+ *   BFS initializes all V vertices and scans every reachable edge exactly once,
+ *   so on a connected graph the work is input-INDEPENDENT and Theta(V + E) is the
+ *   tight bound for best, average and worst case alike. If only part of the graph
+ *   is reachable from source, only that component's V'+E' is paid, still bounded
+ *   above by V + E.
+ *
  * Key points / assumptions:
  *   - Works on directed or undirected graphs; here the demo graph is undirected
  *     (we insert both (u,v) and (v,u)).
@@ -37,8 +70,8 @@
 #include <iostream>
 #include <cstddef>
 
-// A large sentinel meaning "unreachable". We only ever ADD 1 to a real (finite)
-// distance, never to INF itself, so this cannot overflow.
+// Sentinel meaning "unreachable". Real distances are always >= 0, so the
+// negative value -1 can never collide with a genuine (finite) distance.
 constexpr int INF = -1;  // distances are >= 0, so -1 is an unambiguous "no path"
 
 // Undirected adjacency list represented as vector<vector<int>>: adj[u] lists the

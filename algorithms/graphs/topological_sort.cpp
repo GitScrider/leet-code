@@ -29,6 +29,50 @@
  *   Kahn: build indegrees O(V+E), each edge relaxed once. DFS: each vertex/edge
  *   visited once. Space is the queue/stack + bookkeeping arrays, O(V).
  *
+ * Complexity derivation (both variants; DIRECTED graph, so SUM out-deg(u) = E):
+ *   Kahn's algorithm.
+ *     - Building the indegree array walks every adjacency list once:
+ *       SUM_{u in V} out-deg(u) = E increments, plus O(V) to allocate/zero.
+ *     - Seeding the queue scans all V indegrees once: c1*V.
+ *     - The main loop dequeues each vertex EXACTLY ONCE (a vertex is pushed only
+ *       when its indegree first reaches 0, which happens once), and on dequeuing
+ *       u it decrements indegree along each out-edge of u, so the relaxations
+ *       total SUM_{u in V} out-deg(u) = E.
+ *     Summing:
+ *
+ *       C_kahn(V,E) = (E + c0*V)            (build indegrees)
+ *                   + c1*V                  (seed queue)
+ *                   + SUM_{u in V}(1 + out-deg(u))   (main loop = V + E)
+ *                   = (c0 + c1 + 1)*V + 2E
+ *                   = O(V + E)
+ *
+ *   DFS-based. The outer loop calls topoDfsVisit once per still-white vertex, and
+ *   each vertex is colored white->gray->black exactly once, so there are V visits
+ *   in total; the for loop inside the visit of u scans out-deg(u) edges. Hence:
+ *
+ *       C_dfs(V,E) = c2*V + SUM_{u in V}(1 + out-deg(u)) = (c2+1)*V + E = O(V + E)
+ *
+ *   Every vertex is finalized once and every edge relaxed/examined once, so both
+ *   methods are exactly linear in V + E.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants) on size n = V + E:
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Both counts have the form f(V,E) = a*V + b*E with constant a,b; take
+ *   g = V + E:
+ *     upper  O:     f <= max(a,b) * (V + E)              => O(V + E)
+ *     lower  Omega: f >= min(a,b) * (V + E)              => Omega(V + E)
+ *     tight  Theta: both hold                            => Theta(V + E)
+ *   On a DAG all V vertices are emitted and all E edges relaxed exactly once, so
+ *   the work is structure-INDEPENDENT and Theta(V + E) is tight for every acyclic
+ *   input. On a CYCLIC graph the algorithms STOP EARLY (Kahn emits < V; DFS
+ *   returns on the first back edge), doing at most that same amount of work, so
+ *   the O(V + E) upper bound still holds. This is NOT a comparison sort -- it
+ *   orders by edge constraints, not by key comparisons -- so the comparison-sort
+ *   Omega(n log n) lower bound does NOT apply here.
+ *
  * Key points / assumptions:
  *   - DIRECTED graph. A topological order exists IFF the graph is a DAG.
  *   - The order is generally NOT unique; any order respecting all edges is valid,

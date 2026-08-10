@@ -29,6 +29,38 @@
  *   | Space | O(V + E)  |   transpose adjacency + stack + visited/id arrays
  *   +-------+-----------+
  *
+ * Complexity derivation (three linear scans over V and E; count over V and E):
+ *   Kosaraju runs three input-independent phases; sum their costs.
+ *
+ *     PASS 1  (fillOrder DFS on the original graph)  Each vertex is marked and
+ *             entered once (SUM_v 1 = V) and its adjacency list is scanned once
+ *             (SUM_v outdeg(v) = E)         =>  V + E.
+ *     BUILD   (construct the transpose)  The double loop visits every vertex
+ *             once and every out-edge once: SUM_v (1 + outdeg(v)) = V + E, and
+ *             each gt.addEdge is O(1)       =>  V + E.
+ *     PASS 2  (collect DFS on the transpose + popping the finish stack)  The
+ *             transpose has the same V vertices and E edges; each vertex is
+ *             labelled once and each reversed edge scanned once, and the while
+ *             loop pops all V stack entries at O(1) each  =>  V + E.
+ *
+ *   Total:
+ *       C = (V + E) + (V + E) + (V + E) = 3*(V + E) = O(V + E)
+ *
+ *   No branch depends on edge weights or vertex values, so every input of the
+ *   same (V, E) costs the same up to constants -- the work is data-independent.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; here "size" = V + E):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The exact count is C = 3*(V + E). Take g = V + E:
+ *     upper  O:     C <= 3*(V + E)             => T = O(V + E)
+ *     lower  Omega: C >= 1*(V + E)             => T = Omega(V + E)
+ *     tight  Theta: both hold (c1 = 1, c2 = 3) => T = Theta(V + E)
+ *   There is no early exit and no data-dependent branch, so the SAME
+ *   Theta(V + E) is the tight bound for best, average AND worst case.
+ *
  * Key points / assumptions:
  *   - Graph is DIRECTED. In an undirected graph, SCCs == connected components.
  *   - Unweighted; weights do not affect strong connectivity.

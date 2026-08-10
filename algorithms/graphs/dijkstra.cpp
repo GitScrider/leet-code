@@ -29,6 +29,49 @@
  *   | Space  | O(V + E)           |   adjacency list + dist[] + heap
  *   +--------+--------------------+
  *
+ * Complexity derivation (heap-based single-source; count in V and E):
+ *   Charge the work to graph elements. Each vertex is EXTRACTED as a fresh
+ *   minimum (settled) exactly once; the 'settled' guard and the stale-key test
+ *   (d > dist[u]) discard every duplicate pop in O(1). When a vertex u is
+ *   settled its outgoing edges are scanned once, and a scan relaxes at most one
+ *   edge -> at most one heap push. Counting a base "extract" per vertex plus one
+ *   unit per outgoing edge:
+ *
+ *       Work_core = SUM_{u in V} (1 + outdeg(u))
+ *                 = V + SUM_{u in V} outdeg(u)
+ *                 = V + E                          (sum of out-degrees = E)
+ *
+ *   Every unit above touches the binary heap: settling u is a POP, a successful
+ *   relaxation is a PUSH, and at most 1 + E pairs are ever pushed, so the heap
+ *   holds <= E + 1 = O(E) entries. One heap operation therefore costs
+ *   O(log(E+1)) = O(log V), because E <= V^2 => log E <= 2*log V. Multiplying
+ *   the (V + E) operations by the per-operation heap cost:
+ *
+ *       T(V,E) = (V + E) * O(log V) = O((V + E) log V)
+ *
+ *   For a connected graph E >= V-1, so V + E = O(E) and this reads O(E log V);
+ *   the explicit V term keeps the bound valid for sparse/disconnected graphs.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; here the "size" is the
+ *   pair (V, E) and g(V,E) = (V + E) log V):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(V,E) <= c2*g(V,E)
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(V,E) <= f(V,E)
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Upper  O:     <= (1 + E) pushes and (1 + E) pops, each O(log V), plus the E
+ *                 edge scans and V settles => f <= c2*(V + E)*log2 V
+ *                 => T = O((V + E) log V).
+ *   Lower  Omega: the source and every reachable vertex is popped (>= 1 heap op
+ *                 of cost up to log V) and, in the worst case (dense graph where
+ *                 every edge improves a distance) all E edges force a push =>
+ *                 f >= c1*(V + E)*log2 V => T = Omega((V + E) log V) (worst case).
+ *   Tight  Theta: the heap operations dominate and the worst case attains the
+ *                 upper bound => Theta((V + E) log V) for this binary-heap form.
+ *   This is a graph traversal, NOT a comparison sort, so the Omega(n log n)
+ *   sorting lower bound does not apply; the log V factor comes solely from the
+ *   heap. A Fibonacci-heap variant (O(1) amortized decrease-key) lowers this to
+ *   O(E + V log V).
+ *
  * Key points / assumptions:
  *   - Works on directed OR undirected graphs (store an undirected edge twice).
  *   - Edge weights MUST be non-negative. With a negative edge the greedy

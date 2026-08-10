@@ -26,6 +26,39 @@
  *   | Space | O(V)      |   colour/visited arrays + recursion stack
  *   +-------+-----------+
  *
+ * Complexity derivation (each vertex once, each edge once; count over V and E):
+ *   Both routines are a single DFS that MARKS a vertex the first time it is
+ *   reached (visited=true, or WHITE->GRAY) and never re-enters a marked vertex.
+ *   So the body runs once per vertex: SUM_{v} 1 = V. Inside vertex u the loop
+ *   scans its whole adjacency list, i.e. deg(u) edge-inspections. Summed:
+ *
+ *       C = SUM_{v=0}^{V-1} (1 + deg(v))
+ *         = V + SUM_{v=0}^{V-1} deg(v)
+ *
+ *   The adjacency-degree sum depends on the storage model:
+ *     UNDIRECTED: every edge is stored at BOTH endpoints, so SUM deg(v) = 2E
+ *                 => C = V + 2E = O(V + E).
+ *     DIRECTED:   every edge is stored once at its tail, so SUM outdeg(v) = E
+ *                 => C = V + E   = O(V + E).
+ *   The outer "for s in 0..V-1" loop that restarts DFS on disconnected graphs
+ *   adds only V cheap "already marked?" checks, i.e. +V, absorbed into O(V + E).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; here "size" = V + E):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Both routines RETURN EARLY the instant a cycle is found, so the cost is
+ *   data-dependent -- give per-case bounds:
+ *     WORST case  (acyclic input: no early return ever fires, so the full graph
+ *                 is traversed) C = V + 2E (undirected) or V + E (directed)
+ *                 => worst-case time is Theta(V + E)  (tight).
+ *     BEST case   (a cycle at the very start, e.g. a self-loop on the first
+ *                 vertex) return true after O(1) work => best-case Theta(1).
+ *   Over ALL inputs the running time is therefore O(V + E) (upper bound, from
+ *   the acyclic worst case) and Omega(1) (lower bound, from an immediate hit);
+ *   it is not a single Theta because best != worst.
+ *
  * Key points / assumptions:
  *   - Two SEPARATE routines: one assumes an undirected graph (edges stored
  *     both ways), the other a directed graph (edges stored one way).

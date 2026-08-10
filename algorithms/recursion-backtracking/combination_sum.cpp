@@ -37,6 +37,45 @@
  *   combination space grows combinatorially with target/M. Sorting + the
  *   "break when a[j] > remaining" prune cuts away all hopeless branches.
  *
+ * Complexity derivation (backtracking state-space tree, pseudo-polynomial):
+ *   Let N = #candidates, T = target, M = min candidate. Two structural facts
+ *   bound the recursion tree:
+ *     DEPTH: every pick subtracts a candidate value >= M from `remaining`, which
+ *       starts at T; after d picks remaining <= T - d*M, and the recursion stops
+ *       once remaining hits 0, so any path has at most D = floor(T / M) picks
+ *       -> tree height D = T/M (this is also the O(T/M) recursion-stack depth).
+ *     BRANCHING: at a node the loop tries candidates a[start..N-1], i.e. up to
+ *       N children per node -> branching factor b <= N.
+ *   A tree with branching <= N and height <= D has node count
+ *
+ *       #nodes <= SUM_{d=0}^{D} N^d = (N^(D+1) - 1)/(N - 1) <= N^(D+1)
+ *              =  N^(T/M + 1)                                (geometric series)
+ *
+ *   Each node does O(1) choose/unchoose work; each success leaf additionally
+ *   copies a combination of length <= T/M. Folding that into the node bound:
+ *
+ *       T = O(N^(T/M + 1))          (loose UPPER bound)
+ *
+ *   It is loose because the sort + "break when a[j] > remaining" prune discards
+ *   most of this full N-ary tree; T appearing in the EXPONENT is what makes the
+ *   cost PSEUDO-POLYNOMIAL (it tracks the numeric magnitude of target, not the
+ *   bit-length of the input). The one-time sort adds O(N log N), dominated.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f <= c2*g(n)   for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The cost is strongly DATA-DEPENDENT (candidate values, target, how early the
+ *   prune fires), so there is no single Theta over all inputs:
+ *     UPPER: over all inputs the search is O(N^(T/M + 1)) (weak-prune worst case).
+ *     LOWER: a run must at least sort, O(N log N), and emit every valid combo, so
+ *            it is Omega(N log N + #combos * avg_len); when M > T the very first
+ *            comparison breaks and only the sort remains -> best case Theta(N log
+ *            N). Because best << worst, only O(worst) / Omega(best) are stated.
+ *   This is not a sorting problem, so the comparison-sort Omega(N log N) bound is
+ *   not the governing limit -- the true floor is the output size (all combos).
+ *
  * Key points / when to use:
  *   - Use when items are reusable and you need every exact-sum breakdown:
  *     making change with unlimited coins, ways to reach a score, etc.

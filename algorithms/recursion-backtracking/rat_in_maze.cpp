@@ -31,6 +31,47 @@
  *   ever exceeds R*C steps and cycles are impossible. Space is O(R*C) for the
  *   visited grid plus a recursion stack no deeper than the number of cells.
  *
+ * Complexity derivation (state-space tree -> geometric summation):
+ *   Let n = R*C be the number of cells. Model the DFS as a tree: each dfs() node
+ *   loops over the 4 cardinal directions, so the branching factor is b <= 4. The
+ *   visited marks let any cell appear at most once on the current path, so every
+ *   root-to-leaf path has length <= n and the tree depth is <= n. The number of
+ *   dfs() nodes is bounded by the geometric series:
+ *
+ *       level d     #nodes (<=)     work per node
+ *       --------    -----------     -------------------------------------------
+ *       d = 0       1               4-direction loop, O(1) checks + push/pop
+ *       d = 1       4               same
+ *       d = 2       4^2             ...
+ *       ...         ...             ...
+ *       d = n       4^n (leaves)    O(1)
+ *
+ *       T(n) = SUM_{d=0}^{n} 4^d
+ *            = (4^(n+1) - 1) / (4 - 1)      (geometric series, ratio 4)
+ *            = (4^(n+1) - 1) / 3
+ *            = O(4^n) = O(4^(R*C))
+ *
+ *   Per-node work is O(1): the fixed 4-iteration loop with O(1) bounds/blocked/
+ *   visited tests plus O(1) push_back/pop_back. Hence total = O(4^(R*C)). Note
+ *   the parent cell is always already visited, so the effective branching is
+ *   <= 3, a tighter O(3^(R*C)); 4^(R*C) is the loose bound the header states.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The cost is DATA-DEPENDENT (it depends on the maze), so bounds are per-case:
+ *     WORST case  a large open grid riddled with dead ends forces the DFS to
+ *                 explore near the whole tree before it finds a route or fails:
+ *                 O(4^(R*C)).
+ *     BEST case   a blocked start/goal returns at once (Theta(1)); an open maze
+ *                 whose first-tried directions march straight to the goal costs
+ *                 one path of length R*C with no backtracking: Theta(R*C).
+ *   Over all inputs the running time is thus O(4^(R*C)) (worst) and Omega(1)
+ *   (best, immediate rejection); no single Theta since best != worst. This is a
+ *   reachability search, not a sort, so the Omega(n log n) sort bound is moot.
+ *
  * Key points / when to use:
  *   - Classic "explore, mark, unmark" DFS backtracking on a grid.
  *   - Marking visited is what guarantees termination (no infinite loops).

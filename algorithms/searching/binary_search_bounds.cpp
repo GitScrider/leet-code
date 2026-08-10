@@ -21,6 +21,38 @@
  *   | Space     |   O(1)   |   O(1)    |   O(1)    |
  *   +-----------+----------+-----------+-----------+
  *
+ * Complexity derivation (loop iteration count / recurrence):
+ *   Each primitive keeps a half-open interval [lo, hi) of size s = hi - lo and
+ *   does O(1) work per iteration (one midpoint compare, then move lo or hi).
+ *   With mid = lo + floor(s/2):
+ *     branch lo = mid + 1 : new size = s - floor(s/2) - 1 = ceil(s/2) - 1
+ *     branch hi = mid     : new size = floor(s/2)
+ *   Either way the size at least HALVES each step, giving the recurrence
+ *
+ *       T(n) = T(n/2) + c ,      T(0) = c0        (base case: empty interval)
+ *
+ *   Counting iterations: the size starts at n and halves until it reaches 0,
+ *
+ *       #iters = SUM_{d=0}^{ceil(log2(n+1)) - 1} 1 = ceil(log2(n+1)) = O(log n)
+ *
+ *   Unlike plain binary search there is NO equality early-exit: the loop always
+ *   runs the full depth to pin down the boundary, so every case costs the same.
+ *   countOf calls both primitives: 2 * O(log n) = O(log n). firstOccurrence and
+ *   lastOccurrence add one O(1) index check, so they are O(log n) as well.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Because there is NO data-dependent early exit, the iteration count is
+ *   ceil(log2(n+1)) for EVERY input. With g = log n, (1/2)log2 n <= f(n) <=
+ *   2 log2 n for n >= 2, so best = average = worst = Theta(log n) -- a single
+ *   tight bound, no per-case split needed (contrast plain binary search, which
+ *   has a Theta(1) best case). The information-theoretic floor for locating a
+ *   boundary among the n+1 gaps by comparisons is Omega(log n), so the toolkit
+ *   is asymptotically optimal.
+ *
  * Key points / when to use:
  *   - The single most useful binary-search toolkit: "how many equal keys",
  *     "where would x be inserted", "range of a duplicate value".

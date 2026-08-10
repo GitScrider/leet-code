@@ -35,6 +35,37 @@
  *   +----------------------+------------------+----------------------------+
  *   N = number of coin denominations. Both use a single 1D rolling table.
  *
+ * Complexity derivation (DP states * work per transition):
+ *   (1) MIN COINS. Two nested loops, body O(1):
+ *         C1(amount, N) = SUM_{a=1}^{amount} SUM_{c in coins} O(1)
+ *                       = SUM_{a=1}^{amount} N
+ *                       = N * amount
+ *                       = O(amount * N).
+ *       Equivalently: amount+1 DP states dp[a], each relaxed against all N coins
+ *       in O(1) -> amount * N transitions. The c<=a / reachability guards skip
+ *       work INSIDE the body but never the loop iteration, so the count is exact.
+ *   (2) COUNT WAYS. Coin-outer, amount-inner, body O(1):
+ *         C2(amount, N) = SUM_{c in coins} SUM_{a=c}^{amount} 1
+ *                       = SUM_{c in coins} (amount - c + 1)
+ *                       <= SUM_{c in coins} amount
+ *                       = N * amount = O(amount * N).
+ *       With denominations small relative to amount each term is ~amount, so the
+ *       bound is tight. Both variants are PSEUDO-POLYNOMIAL: `amount` is a numeric
+ *       magnitude (encoded in ~log(amount) bits), not an input length.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants); take g = amount * N:
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g   for inputs >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f          for inputs >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   MIN COINS executes the inner body exactly amount*N times independent of the
+ *   coin values, so f1 = amount*N and the time is Theta(amount * N): the routine
+ *   is non-adaptive, so best = average = worst.
+ *   COUNT WAYS executes SUM_{c}(amount - c + 1) <= amount*N bodies => O(amount*N),
+ *   and Theta(amount * N) whenever denominations are small relative to amount.
+ *   Nothing is sorted or compared for order, so the comparison-sort lower bound
+ *   Omega(n log n) is irrelevant here -- this is table filling, not a sort.
+ *
  * Key points:
  *   - Min coins is a MIN aggregation (+1 per coin); ways is a SUM (+= counts).
  *   - Coins are UNBOUNDED, so the amount loop goes ASCENDING (a smaller amount

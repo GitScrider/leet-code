@@ -36,6 +36,49 @@
  *   illegal sub-trees early and turns N^N into the far smaller N! envelope.
  *   Space is O(N): the recursion depth is N and each occupancy array is O(N).
  *
+ * Complexity derivation (state-space tree -> summation over levels):
+ *   Model the search as a tree whose level d is board row d (one place() call
+ *   per node). At the root (level 0) there is 1 node. A queen already placed in
+ *   an earlier row rules out at least one distinct column, so a node at row d
+ *   has at most (N - d) safe columns, i.e. branching factor <= N - d. The number
+ *   of place() calls (nodes) per level is therefore bounded by:
+ *
+ *       level d     #nodes (<=)          subproblem     work per node
+ *       --------    -----------------    -----------    ----------------
+ *       d = 0       1                    rows [0, N)    O(N) column scan
+ *       d = 1       N                    rows [1, N)    O(N) column scan
+ *       d = 2       N*(N-1)              rows [2, N)    O(N) column scan
+ *       ...         ...                  ...            ...
+ *       d = k       N!/(N-k)!            rows [k, N)    O(N) column scan
+ *       d = N       N!/0! = N! (leaves)  -              O(1)
+ *
+ *   Summing the node count over all levels (substitute j = N - d):
+ *
+ *       T(N) = SUM_{d=0}^{N} N!/(N-d)!
+ *            = N! * SUM_{j=0}^{N} 1/j!
+ *            < N! * SUM_{j=0}^{inf} 1/j!
+ *            = N! * e                     (e = 2.718..., the exp series)
+ *            = O(N!)
+ *
+ *   So the pruned tree holds O(N!) nodes. Counting the per-node O(N) column scan
+ *   gives O(N * N!) isSafe tests; the file quotes the node/placement count O(N!),
+ *   the standard statement. Without pruning the tree would have N^N leaves.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   For a fixed N the search is deterministic: it visits an exact number P(N) of
+ *   nodes, so the running time is Theta(P(N)). We can only bracket P(N):
+ *     upper  O:     P(N) <= N! * e            => time = O(N!)   (worst case)
+ *     lower  Omega: the solver descends at least one full depth-N path before it
+ *                   reaches a leaf, so P(N) >= N  => time = Omega(N)
+ *   No simple closed-form Theta is claimed: heavy diagonal/column pruning makes
+ *   P(N) grow far slower than N! yet strictly above the linear floor. The
+ *   comparison-sort Omega(N log N) bound is irrelevant -- this is a search, not
+ *   a sort.
+ *
  * Key points / when to use:
  *   - Canonical example of backtracking with constant-time constraint checks.
  *   - One-queen-per-row modeling eliminates an entire class of conflicts.

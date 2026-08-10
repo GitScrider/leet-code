@@ -32,6 +32,64 @@
  *   +----------+---------------------------+
  *   Auxiliary Space: O(1)  (iterative; predicate may use its own O(1) scratch)
  *
+ * Complexity derivation (interval halving / summation):
+ *   Let R = hi - lo + 1 be the number of candidate answers in the closed range
+ *   [lo, hi]. Both skeletons run the SAME loop: while (lo < hi) shrink [lo,hi].
+ *   Let w_d = (hi - lo + 1) be the count of still-live candidates at the START
+ *   of iteration d. Each iteration does O(1) index arithmetic + EXACTLY ONE
+ *   predicate call of cost P = cost(pred), and discards at least floor(w_d/2)
+ *   candidates, so w_{d+1} <= ceil(w_d / 2). The loop stops when w = 1 (lo==hi):
+ *
+ *       iteration d      candidates w_d      pred calls on the level
+ *       -----------      ----------------    -----------------------
+ *       d = 0            R                   1
+ *       d = 1            <= ceil(R/2)        1
+ *       d = 2            <= ceil(R/4)        1
+ *       ...              ...                 ...
+ *       d = t-1          2                   1
+ *       (stop)           1                   -
+ *
+ *   The width halves each step: R -> ceil(R/2) -> ceil(R/4) -> ... -> 1, so the
+ *   number of iterations is t = ceil(log2 R). Summing the per-iteration cost:
+ *
+ *       C(R) = SUM_{d=0}^{t-1} (P + c) = t * (P + c)
+ *            = ceil(log2 R) * (cost(pred) + O(1))
+ *            = O(log R) * cost(pred)
+ *
+ *   Which branch is taken sets the new width to ceil(w/2) (pred true, hi = mid)
+ *   or floor(w/2) (pred false, lo = mid+1); these differ only when w is odd, so
+ *   the EXACT iteration count can vary by +/-1 across inputs of the same R,
+ *   lying between floor(log2 R) and ceil(log2 R) (t = ceil(log2 R) is the upper
+ *   count used above). That +/-1 wobble is a lower-order effect and does not
+ *   change the asymptotics: best = average = worst = Theta(log R) predicate
+ *   calls -> hence the three identical table rows.
+ *   Worked costs of the two examples:
+ *     (1) isqrt(n):        range [0, n] => R = n+1; pred = one division+compare
+ *                          = O(1). Total O(log n) * O(1) = O(log n).
+ *     (2) minEatingSpeed:  range [1, max(pile)] => R = max(pile); pred =
+ *                          hoursToFinish scans all m piles = O(m).
+ *                          Total O(m * log(max pile)).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f(R) <= c2*g(R)  for R >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(R) <= f(R)        for R >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here f(R) = ceil(log2 R) predicate calls; take g(R) = log R = log2 R:
+ *     upper  O:     f(R) <= log2 R + 1 <= 2*log2 R  for R >= 2 => O(log R)
+ *     lower  Omega: f(R) >= log2 R                   for R >= 1 => Omega(log R)
+ *     tight  Theta: both hold (c1 = 1, c2 = 2)       => Theta(log R)
+ *   The loop has NO data-dependent early exit (it always contracts to one point);
+ *   the exact iteration count still varies by at most +/-1 with R -- between
+ *   floor(log2 R) and ceil(log2 R), depending on the branch sequence -- but this
+ *   lower-order wobble leaves best = average = worst = Theta(log R), a SINGLE
+ *   tight bound -- unlike an adaptive algorithm. Multiply by cost(pred)
+ *   for the running time. Lower-bound note: this is a search, not a comparison
+ *   sort, so the Omega(n log n) sorting bound does NOT apply. The relevant limit
+ *   is information-theoretic: distinguishing R possible answers needs log2 R
+ *   yes/no outcomes and each predicate call yields exactly 1 bit, so ANY correct
+ *   method needs >= ceil(log2 R) calls -- binary search meets it and is optimal.
+ *
  * Key points / when to use:
  *   - Applicable whenever "is an answer of x feasible?" is monotone in x.
  *   - Use lo + (hi - lo)/2 to avoid overflow; bias the mid UP for lastTrue so the

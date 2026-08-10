@@ -24,6 +24,37 @@
  *   | Space  | O(V + E)  |   edge list + dist[]
  *   +--------+-----------+
  *
+ * Complexity derivation (edge-relaxation passes; count in V and E):
+ *   The relaxation loop runs at most V-1 passes; each pass scans the whole edge
+ *   list once and does O(1) work per edge (one comparison, one guarded update).
+ *   Then a single extra pass over all E edges checks for a negative cycle. Let
+ *   C(V,E) be the number of edge relaxations:
+ *
+ *       C(V,E) = SUM_{pass=1}^{V-1} E   +   E            (detection pass)
+ *              = (V - 1) * E + E
+ *              = V * E
+ *              = O(V * E)
+ *
+ *   Each term is O(1), so the total operation count is Theta(V*E) when the
+ *   early-exit never fires. The 'changed' flag makes the algorithm ADAPTIVE: if
+ *   distances converge after p < V-1 passes the loop breaks, costing
+ *   (p + 1) * E; in the best case p = 1 (a pass changes nothing) so only about
+ *   2*E = O(E) work is done.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; g(V,E) = V*E):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(V,E) <= c2*g(V,E)
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(V,E) <= f(V,E)
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The early-exit makes the cost DATA-DEPENDENT, so bounds are per case:
+ *     WORST case  C = V*E (no early exit) => worst-case time Theta(V*E) (tight).
+ *     BEST case   C = 2*E (converges in one pass + detection) => Theta(E).
+ *   Over ALL inputs the running time is therefore O(V*E) (upper, from the worst
+ *   case) and Omega(E) (lower: the detection pass, plus at least one relaxation
+ *   pass when V >= 2, always scans all E edges). It is not a single Theta because
+ *   best (E) != worst (V*E). This is not a comparison sort, so the Omega(n log n)
+ *   sorting lower bound is irrelevant.
+ *
  * Key points / assumptions:
  *   - Works on directed graphs; an undirected negative edge is itself a negative
  *     2-cycle, so undirected + negative weight is generally ill-posed.

@@ -37,6 +37,35 @@
  * Only dp[i-1][*] and the current row are ever needed, so two rows of length
  * min(m,n)+1 suffice -- the O(min(m,n)) space optimization implemented below.
  *
+ * Complexity derivation (double-loop cell count)
+ * ----------------------------------------------
+ *   The table has (m+1)*(n+1) cells. Base initialization sets row 0 and column 0
+ *   in (m+1) + (n+1) steps of O(1). The fill then runs i = 1..m and, for each i,
+ *   j = 1..n, doing O(1) work per cell (one char compare, then a 3-way min).
+ *   Counting cell computations:
+ *
+ *       C(m,n) = SUM_{i=1}^{m} SUM_{j=1}^{n} c
+ *              = SUM_{i=1}^{m} (c * n)
+ *              = c * m * n
+ *              = O(m * n)
+ *
+ *   The O(m + n) base setup is dominated by c*m*n. The rolling version computes
+ *   the SAME m*n cells (only reusing two length-(min(m,n)+1) rows), so its time
+ *   is identical O(m*n); it merely lowers space to O(min(m,n)). When both strings
+ *   have length Theta(N) this reads as Theta(N^2).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight)
+ * ------------------------------------------------------------
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(N) = O(g)      iff  EXISTS c2, n0 :       f(N) <= c2*g(N)  for N >= n0
+ *     f(N) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(N) <= f(N)        for N >= n0
+ *     f(N) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Both loops always run to their bounds: neither the a[i-1]==b[j-1] branch nor
+ *   the string contents can shorten the m*n iterations (there is no early exit).
+ *   Thus f(m,n) = c*m*n EXACTLY for every input. With g = m*n,
+ *       c1*(m*n) <= f(m,n) <= c2*(m*n)      (here c1 = c2 = c)
+ *   so the running time is Theta(m*n) -- best, average and worst all coincide.
+ *
  * Key points
  * ----------
  *  - Bottom-up full table is the clearest form and can reconstruct operations.

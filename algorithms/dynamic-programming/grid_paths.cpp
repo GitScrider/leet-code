@@ -34,6 +34,33 @@
  *   rolling 1-D array of length n suffices -> O(n) space. A rolling version of
  *   uniquePaths is implemented below (uniquePathsRolling).
  *
+ * Complexity derivation (DP states * work-per-state, summation):
+ *   Every variant fills one table entry per grid cell, and each entry costs
+ *   O(1): read up to two already-computed neighbours and do one add (counting)
+ *   or one min + one add (cost). The loop bounds depend only on the dimensions
+ *   m, n and not on the grid contents, so the count is exact:
+ *
+ *       C(m, n) = SUM_{i=0}^{m-1} SUM_{j=0}^{n-1} c
+ *               = SUM_{i=0}^{m-1} (c * n)      (inner row is c summed n times)
+ *               = c * m * n
+ *               = O(m * n)
+ *   i.e. m*n cells * O(1) each. The rolling variant reuses one length-n row over
+ *   the m outer iterations, performing the SAME m*n unit updates, so it keeps
+ *   Theta(m*n) time while cutting space from O(m*n) down to O(n).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, N0 positive constants, over size N = m*n):
+ *     f = O(g)      iff  EXISTS c2, N0 :       f(N) <= c2*g(N)  for N >= N0
+ *     f = Omega(g)  iff  EXISTS c1, N0 :  c1*g(N) <= f(N)        for N >= N0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here f(m,n) = c*m*n with g = m*n:
+ *     upper  O:     f <= c*(m*n)     => O(m*n)
+ *     lower  Omega: f >= c*(m*n)     => Omega(m*n)
+ *     tight  Theta: both hold (c1 = c2 = c) => Theta(m*n)
+ *   The work is input-independent -- obstacles only change stored values, never
+ *   the number of cells visited -- so best = average = worst = Theta(m*n). The
+ *   exponential brute-force references cross-check correctness only, not the bound.
+ *
  * Key points:
  *   - Pure bottom-up tabulation; the first row and first column are the
  *     boundary base cases (only one straight-line way to reach them).

@@ -32,6 +32,59 @@
  *   the Fibonacci numbers themselves (~phi^n). MEMOIZATION caches each fib(k)
  *   the first time it is computed, collapsing the tree to O(n) distinct calls.
  *
+ * Complexity derivation (per routine: recurrence -> unfolded count):
+ *   factorial(n): a single non-branching chain of calls.
+ *       T(n) = T(n-1) + c ,   T(0) = c0        (base case)
+ *            = c0 + SUM_{k=1}^{n} c  =  c0 + c*n  =  O(n).
+ *     The recursion tree is one PATH of n+1 nodes, O(1) work each => O(n) time
+ *     and O(n) stack depth. sumArray is identical; reverse peels TWO elements
+ *     per call, T(n) = T(n-2) + c => n/2 levels => still O(n).
+ *
+ *   fibNaive(n): a binary but UNBALANCED tree that recomputes subproblems.
+ *       T(n) = T(n-1) + T(n-2) + c ,   T(0) = T(1) = c0
+ *     The node count obeys the Fibonacci recurrence itself: #calls(n) =
+ *     2*F(n+1) - 1, and F(n) = (phi^n - psi^n)/sqrt5, phi = (1+sqrt5)/2. Squeeze
+ *     it between two clean geometric recurrences:
+ *       T(n) >= 2*T(n-2)  => T(n) >= 2^(n/2) = (sqrt2)^n     (lower)
+ *       T(n) <= 2*T(n-1)  => T(n) <= 2^n                     (upper)
+ *     so the true rate phi^n (~1.618^n) sits between => O(2^n), exponential.
+ *
+ *   fibMemo(n): there are exactly n+1 distinct states fib(0..n). Each state's
+ *     body runs ONCE (first visit fills memo[k]); every later reference is a
+ *     cache hit returning in O(1). Work = (n+1) states * O(1) = O(n).
+ *
+ *   gcd(a,b) [Euclid]: T(a,b) = T(b, a mod b) + c. Key fact: a mod b < a/2
+ *     whenever b <= a, so TWO successive steps at least halve the first
+ *     argument => #steps <= 2*log2(a) = O(log a). The worst input is a pair of
+ *     consecutive Fibonacci numbers (F(k+1), F(k)), taking k steps with
+ *     F(k) ~ phi^k, i.e. k ~ log_phi(min) = O(log min(a,b)).
+ *
+ *   ipow(b,e) [exponentiation by squaring]: an even exponent halves e in one
+ *     call; an odd exponent peels one factor (e -> e-1) so the NEXT call is
+ *     even -- at most 2 calls per halving:
+ *       T(e) = T(e/2) + O(1)      (amortizing the odd peel)
+ *     Master Theorem a=1, b=2, f=O(1)=Theta(e^(log_2 1))=Theta(1): case 2 =>
+ *     T(e) = Theta(log e). Equivalently e has floor(log2 e)+1 bits, O(1) each.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Definitions (c1, c2, n0 positive constants):
+ *     f = O(g)     iff EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g) iff EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g) iff f = O(g) AND f = Omega(g):
+ *                      c1*g(n) <= f(n) <= c2*g(n)  for n >= n0
+ *   Each routine's cost is INPUT-INDEPENDENT (given its size parameter), so
+ *   best = worst and every bound below is a tight Theta:
+ *     factorial, sumArray, reverse : Theta(n)       (n, n, n/2 levels)
+ *     fibMemo                      : Theta(n)       (n+1 states, O(1) each)
+ *     gcd(a,b)                     : O(log min); worst Theta(log min) on
+ *                                    consecutive-Fibonacci inputs
+ *     ipow(b,e)                    : Theta(log e)
+ *   fibNaive is the exception worth stating with constants: with g = 2^n,
+ *     (sqrt2)^n <= T(n) <= 2^n  for n >= 1, i.e. Omega(2^(n/2)) and O(2^n);
+ *     the exact tight rate is Theta(phi^n), phi = (1+sqrt5)/2 ~ 1.618. These
+ *     are EXPONENTIAL lower bounds -- no input makes naive Fibonacci cheap,
+ *     which is precisely why memoization (Theta(n)) is the fix.
+ *
  * Key points / when to use:
  *   - Every correct recursion needs a base case that is actually reachable, or
  *     it recurses forever (stack overflow).

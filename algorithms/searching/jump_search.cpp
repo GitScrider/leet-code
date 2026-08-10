@@ -27,6 +27,44 @@
  *   +-----------+-------------+-------------+-------------+
  *   (Best case: target sits in the very first block near the front.)
  *
+ * Complexity derivation (instruction count / summation + minimization):
+ *   Let n = a.size() and let s be the block size. The work splits into two
+ *   phases whose costs we count separately:
+ *     - Jump phase: we test one boundary element a[curr-1] per block until we
+ *       overshoot. There are at most ceil(n/s) blocks, so at most n/s boundary
+ *       COMPARISONS.
+ *     - Linear phase: we scan the single overshot block [prev, prev+s), i.e. at
+ *       most s-1 element COMPARISONS.
+ *   Total comparisons as a function of the block size s:
+ *
+ *       C(n, s) = (n / s) + (s - 1)              (jumps + final in-block scan)
+ *
+ *   Minimize over s (treat s as continuous): dC/ds = -n/s^2 + 1 = 0 => s^2 = n
+ *   => s = sqrt(n). The code picks exactly s = floor(sqrt(n)). Substituting:
+ *
+ *       C(n) = n/sqrt(n) + sqrt(n) - 1 = sqrt(n) + sqrt(n) - 1 = 2*sqrt(n) - 1
+ *            = O(sqrt n)
+ *
+ *   The sqrt(n) block size is what balances the two phases at ~sqrt(n) each; any
+ *   other s makes one term dominate and grow faster. Best case: the target is
+ *   found on the first in-block probe (front of the array) -> O(1).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The cost is data-dependent, so the bound is PER CASE:
+ *     WORST/AVERAGE  C(n) = 2*sqrt(n) - 1 with g = sqrt(n): (1/2)*sqrt(n) <= C(n)
+ *                    <= 2*sqrt(n) for n >= 1  =>  Theta(sqrt n) (tight).
+ *     BEST case      target at the front, one probe -> C(n) = 1  =>  Theta(1).
+ *   Over ALL inputs the running time is O(sqrt n) (upper, from the worst case)
+ *   and Omega(1) (lower, from the best case), so it is not a single Theta -- the
+ *   reason Best is split from Average/Worst in the table. This is a comparison
+ *   SEARCH on a sorted array, not a sort, so the Omega(n log n) comparison-sort
+ *   bound is irrelevant; binary search's Theta(log n) is the true search optimum,
+ *   and jump search's Theta(sqrt n) is worse because it only ever steps forward.
+ *
  * Key points / when to use:
  *   - Requires the range to be sorted ascending.
  *   - Faster than linear search, slower than binary search, but only ever steps

@@ -32,6 +32,43 @@
  *   n = s.size(); the extra L is the cost of hashing/comparing a candidate
  *   substring of length up to n during each unordered_set lookup.
  *
+ * Complexity derivation (DP states * work-per-transition, summation):
+ *   States: dp[0..n] gives n+1 prefixes = O(n) states. The transition for dp[i]
+ *   scans split points j = 0..i-1; each split builds the candidate s.substr(j,
+ *   i-j) and hashes/compares it. Let L be the candidate length (i-j), at most n.
+ *   Count the (i, j) inner iterations:
+ *
+ *       pairs(n) = SUM_{i=1}^{n} SUM_{j=0}^{i-1} 1
+ *                = SUM_{i=1}^{n} i
+ *                = n*(n+1)/2                    (arithmetic series, Gauss)
+ *                = Theta(n^2)
+ *   Spending O(L) to build + hash each candidate gives Theta(n^2) * O(L)
+ *   = O(n^2 * L). Charging each candidate its TRUE length (i-j) yields the exact
+ *   worst-case count:
+ *
+ *       SUM_{i=1}^{n} SUM_{j=0}^{i-1} (i - j)
+ *            = SUM_{i=1}^{n} SUM_{k=1}^{i} k    (substitute k = i - j)
+ *            = SUM_{i=1}^{n} i*(i+1)/2
+ *            = Theta(n^3)
+ *   i.e. O(n^2 * L) with L = Theta(n). dp is a single (n+1)-length array,
+ *   so space is O(n) (plus the dictionary storage).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The inner "break" on the first valid split makes the cost data-dependent:
+ *     WORST case (no early split ever succeeds) scans all n*(n+1)/2 pairs, each
+ *                up to O(L) -> Theta(n^2 * L).
+ *     BEST case still runs the outer loop n times and, because dp[0] is always
+ *                true, pays at least the j=0 length-i substring hash on every i,
+ *                a guaranteed SUM_{i=1}^{n} Theta(i) = Omega(n^2).
+ *   So the overall running time is O(n^2 * L) (upper) and Omega(n^2) (lower); it
+ *   is not a single Theta unless L is constant. Membership is decided by HASHING,
+ *   not comparison sorting, so the Omega(n log n) comparison lower bound does not
+ *   apply here.
+ *
  * Key points:
  *   - Bottom-up tabulation over prefix lengths; dp is a simple 1-D boolean
  *     array, so there is no meaningful further space reduction.

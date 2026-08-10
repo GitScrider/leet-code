@@ -38,6 +38,40 @@
  *   +-----------+----------------------+
  *   Space: O(V + E)  (adjacency list + heap holding up to O(E) entries)
  *
+ * Complexity derivation (heap ops counted over the whole run):
+ *   Lazy Prim on V vertices, E edges, using a binary min-heap.
+ *   (1) ABSORPTIONS: a vertex is marked visited at most once, so exactly V pops
+ *       do "useful" work; the remaining pops are stale entries discarded by the
+ *       visited check. Either way every item that enters the heap leaves it once.
+ *   (2) RELAX / PUSHES: when u is absorbed we scan its adjacency list and push
+ *       each not-yet-visited neighbour. Each undirected edge {u,v} is stored on
+ *       BOTH endpoints, so it is examined at most twice, bounding total pushes by
+ *           P = SUM_{u in V} deg(u) = 2E = O(E).
+ *       The heap therefore holds up to O(E) items and total pops = total pushes.
+ *   (3) HEAP COST: each push and each pop is O(log(heap size)) = O(log E). A
+ *       simple graph has E <= V^2, so log E <= 2*log V = O(log V). Summing:
+ *           T(V,E) = O(E) pushes * O(log V)          (push work)
+ *                  + O(E) pops   * O(log V)          (pop  work)
+ *                  + SUM_{u} deg(u) = 2E             (adjacency scans)
+ *                  = O(E log V) + O(E) = O(E log V).
+ *   The linear O(E) adjacency-scan term is dominated by the O(E log V) heap term.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; size = V + E):
+ *     f = O(g)      iff  EXISTS c2, n0 :       f <= c2*g       for size >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f            for size >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The heap operations set the ceiling and the traversal sets the floor:
+ *     upper  O:     T = O(E log V)   -- <= 2E pushes and <= 2E pops, each O(log V).
+ *     lower  Omega: T = Omega(E + V) -- every edge is examined in a relax and V
+ *                   vertices are popped, independent of weights.
+ *   These are NOT the same order, so the running time is O(E log V) overall rather
+ *   than a single Theta: the WORST case (e.g. a dense graph whose heap really does
+ *   grow to Theta(E)) is Theta(E log V), while inputs with few heap collisions pop
+ *   with less than log V comparisons and approach the Omega(E + V) floor. No
+ *   comparison-sort Omega(E log E) bound applies -- Prim never sorts the edge set;
+ *   it only compares heap keys, so weights are ordered lazily, not up front.
+ *
  * Key points / assumptions:
  *   - Graph is UNDIRECTED and weighted; store each edge in BOTH directions in the
  *     adjacency list so the tree can grow either way across it.

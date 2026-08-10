@@ -18,6 +18,50 @@
  *   | Space     |   O(1)   | O(log n)  | O(log n)  |  (recursive: call stack)
  *   +-----------+----------+-----------+-----------+
  *
+ * Complexity derivation (recurrence -> recursion tree -> summation):
+ *   Let T(n) be the number of comparisons to search a range of n elements. Each
+ *   call does O(1) work (one midpoint compare) and then recurses on ONE half --
+ *   unlike merge sort it makes a single recursive call, not two:
+ *
+ *       T(n) = T(n/2) + c ,      T(0) = c0        (base case: empty range)
+ *
+ *   The "recursion tree" is a single CHAIN (one node per level, not branching),
+ *   because only one side of mid survives each step:
+ *
+ *       level d      #nodes      size each        work on the level
+ *       ---------    --------    -------------    ------------------
+ *       d = 0        1           n                c
+ *       d = 1        1           n/2              c
+ *       d = 2        1           n/4              c
+ *       ...          ...         ...              ...
+ *       d = k        1           n/2^k            c
+ *
+ *   The chain ends when the size drops from 1 to 0, i.e. at k = floor(log2 n),
+ *   so there are (floor(log2 n) + 1) levels. Summing the per-level work:
+ *
+ *       T(n) = SUM_{d=0}^{floor(log2 n)} c = c * (floor(log2 n) + 1) = O(log n)
+ *
+ *   Master Theorem check (a=1, b=2, f(n)=c): n^(log_b a) = n^(log2 1) = n^0 = 1,
+ *   the same order as f(n) -> case 2 -> T(n) = O(n^0 * log n) = O(log n). The
+ *   recursive and iterative versions run the identical compare sequence; only
+ *   the O(log n) call stack vs O(1) space differs.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Binary search returns early when mid hits the target, so it is data-
+ *   dependent:
+ *     BEST case   T(n) = 1                => Theta(1)   (target is the 1st mid)
+ *     WORST case  T(n) = floor(log2 n)+1  => Theta(log n)  (absent, or found
+ *                 only at the last probe); with g = log n, (1/2)log2 n <= T(n)
+ *                 <= 2 log2 n for n >= 2, so log n is tight.
+ *   Over ALL inputs the time is O(log n) (upper, worst case) and Omega(1)
+ *   (lower, best case). The information-theoretic floor for ANY comparison-based
+ *   search of a sorted range is Omega(log n): a decision tree separating the
+ *   n+1 possible outcomes needs height >= log2(n+1), so O(log n) is optimal.
+ *
  * Key points / when to use:
  *   - Use on sorted, random-access data that is searched many times; the one-
  *     time sort cost amortizes away.

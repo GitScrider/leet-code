@@ -24,6 +24,42 @@
  *   | Space     | O(n) recursion depth + O(n) buffer (output not counted). |
  *   +-----------+---------------------------------------------------------+
  *
+ * Complexity derivation (state-space tree sized by the Catalan number):
+ *   Pruning (opens < n and closes < opens) guarantees that EVERY node of the
+ *   recursion tree is a legal prefix and every root-to-leaf path has length 2n,
+ *   so no branch is ever built only to be rejected. The number of LEAVES is
+ *   therefore exactly the number of well-formed strings, the nth Catalan number:
+ *
+ *       C(n) = (2n)! / (n! (n+1)!)
+ *
+ *   Work per node: an internal node does O(1) (one push_back + one pop_back per
+ *   choice); each leaf copies its length-2n buffer into `out`, costing O(n). The
+ *   total is dominated by that leaf copying (internal work is of no higher order):
+ *
+ *       T(n) = SUM_{leaves} O(n) = C(n) * O(n) = Theta(n * C(n))
+ *
+ *   Applying Stirling's approximation to the Catalan number:
+ *
+ *       C(n) = (2n)!/(n!(n+1)!) ~ 4^n / (sqrt(pi) * n^(3/2))
+ *
+ *   so     T(n) = Theta( n * 4^n / n^(3/2) ) = Theta( 4^n / sqrt(n) ),
+ *
+ *   exactly the stated bound. (Without the two-counter pruning one would walk all
+ *   2^(2n) length-2n strings; pruning collapses that to the C(n) valid ones.)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The work depends ONLY on n (there is no input data to vary), so best = worst:
+ *   with g(n) = 4^n/sqrt(n) and f(n) = n*C(n), Stirling gives
+ *       c1 * g(n) <= f(n) <= c2 * g(n)   for n >= 1   (c1, c2 near 1/sqrt(pi)),
+ *   hence T(n) = Theta(4^n / sqrt(n)) -- a single tight bound, both O and Omega.
+ *   This is output-sensitive OPTIMAL: the result set alone has size Theta(n*C(n)),
+ *   so no algorithm can emit it faster. The comparison-sort Omega(n log n) bound
+ *   does not apply (nothing is being sorted or ordered by comparison).
+ *
  * Key points / when to use:
  *   - Classic "generate all structurally valid sequences" backtracking.
  *   - Count of results equals the nth Catalan number C(n) = (2n)! / (n!(n+1)!).

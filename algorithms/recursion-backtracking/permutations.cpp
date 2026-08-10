@@ -32,6 +32,39 @@
  *   rules PRUNE branches that would regenerate an already-seen arrangement,
  *   bringing the count down from n! to exactly n!/(product of multiplicities!).
  *
+ * Complexity derivation (state-space tree: #nodes * work-per-node):
+ *   Model the search as a tree whose depth is n (one level per filled slot).
+ *   WITHOUT dedup, slot 0 has n candidates, slot 1 has n-1, ..., so the number
+ *   of nodes at depth k is n*(n-1)*...*(n-k+1) = n!/(n-k)!, and the total node
+ *   count is
+ *       SUM_{k=0}^{n} n!/(n-k)! = n! * SUM_{j=0}^{n} 1/j!  ->  n! * e = O(n!),
+ *   with exactly n! leaves (complete permutations). Work per INTERNAL node is
+ *   O(1) (one choose + one unchoose); each LEAF additionally COPIES its
+ *   length-n permutation into `out` at cost O(n). Leaf copying dominates:
+ *       T = O(n!) internal + n! leaves * O(n) copy = O(n * n!).
+ *   WITH duplicates the "skip equal-to-previous-when-unused" (A) / per-slot
+ *   "seen" set (B) rules PRUNE every subtree that would regenerate an already
+ *   emitted arrangement, cutting the leaf count from n! to exactly
+ *       P = n! / (m1! * m2! * ...)          (mi = multiplicities),
+ *   and the surviving tree has O(n * P) nodes on its root-to-leaf paths. Hence
+ *       T(n) = (#nodes) * O(1) + P leaves * O(n) copy = O(n * P).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Definitions (c1, c2, n0 positive constants):
+ *     f = O(g)     iff EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g) iff EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g) iff f = O(g) AND f = Omega(g)
+ *   Let P = n!/(m1!*...*mk!) be the number of DISTINCT permutations. The work
+ *   is fixed once the input multiset is fixed (enumeration is exhaustive), so
+ *   with g = n * P:
+ *     lower  Omega: any lister must EMIT P tuples of length n => T >= c1 * n*P
+ *     upper  O:     the pruned tree has O(n*P) path-nodes      => T <= c2 * n*P
+ *     tight  Theta: both hold => T(n) = Theta(n * P)  (output-optimal).
+ *   Special cases: all-distinct (every mi = 1) => P = n! => Theta(n * n!);
+ *   one value repeated n times => P = 1 => Theta(n). This is NOT a comparison
+ *   sort, so the Omega(n log n) sorting bound does not apply; the sort in
+ *   approach (A) is a one-off O(n log n) setup dwarfed by O(n * P).
+ *
  * Key points / when to use:
  *   - Canonical backtracking template: choose -> recurse -> undo.
  *   - Sort + "skip equal-to-previous-when-unused" is the idiomatic dedup rule.

@@ -34,6 +34,39 @@
  *   n = number of matrices. No simple 1-D space optimization exists: dp[i][j]
  *   depends on a whole row and column of smaller intervals.
  *
+ * Complexity derivation (triple-loop summation over intervals):
+ *   Three nested loops: len = 2..n (chain length), i = 1..n-len+1 (start), and
+ *   k = i..j-1 with j = i+len-1 (the split point), the innermost body being O(1).
+ *   For a fixed len there are (n-len+1) starts, each running (len-1) split
+ *   iterations, so the body executes:
+ *
+ *       C(n) = SUM_{len=2}^{n} (n - len + 1) * (len - 1)
+ *
+ *   Substitute m = len - 1 (so m = 1..n-1 and n - len + 1 = n - m):
+ *
+ *       C(n) = SUM_{m=1}^{n-1} (n - m) * m
+ *            = n * SUM_{m=1}^{n-1} m  -  SUM_{m=1}^{n-1} m^2
+ *            = n * (n-1)n/2  -  (n-1)n(2n-1)/6         (Gauss + square-sum)
+ *            = n(n-1) * [ 3n - (2n-1) ] / 6
+ *            = n(n-1)(n+1) / 6
+ *            = (n^3 - n) / 6
+ *            = O(n^3)
+ *
+ *   (This equals C(n+1, 3): one body execution per triple i <= k < j.) The dp and
+ *   split tables each hold (n+1)^2 cells => O(n^2) space.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The triple loop runs (n^3 - n)/6 times for EVERY input: the dimension VALUES
+ *   in p[] and the `cost < dp[i][j]` test affect only which split is stored,
+ *   never the trip counts. So f(n) = (n^3 - n)/6 exactly. With g = n^3,
+ *       (1/12)n^3 <= (n^3 - n)/6 <= (1/6)n^3      for n >= 2
+ *   hence the running time is Theta(n^3) -- best = average = worst (the count of
+ *   matrices n drives the cost, not their sizes).
+ *
  * Key points:
  *   - Classic interval DP: iterate by INCREASING chain length so every
  *     smaller interval is finalized before a larger one uses it.

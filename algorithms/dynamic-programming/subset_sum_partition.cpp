@@ -28,6 +28,35 @@
  *   +---------------------+-----------------+---------------------------------+
  *   Pseudo-polynomial in the target/sum magnitude.
  *
+ * Complexity derivation (nested-loop instruction count / summation):
+ *   subsetSum: the outer loop runs once per number (N iterations). For a fixed
+ *   number x the inner loop runs s = target, target-1, ..., x, that is
+ *   (target - x + 1) iterations, each doing O(1) OR-aggregate work. Summing the
+ *   inner cost over all numbers:
+ *
+ *       C(N, target) = SUM_{x in nums} (target - x + 1)
+ *                    <= SUM_{x in nums} (target + 1)          (since x >= 0)
+ *                    =  N * (target + 1)
+ *                    =  O(N * target)
+ *
+ *   The one-time dp allocation/initialization adds Theta(target). Equal
+ *   partition first computes total = SUM nums in O(N), rejects odd totals, then
+ *   calls subsetSum with target = sum/2, giving O(N * sum/2) = O(N * sum).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants), problem SIZE = (N, target):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g   for inputs >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f          for inputs >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   WORST case (e.g. all x = 0, or every x <= target): each inner loop runs
+ *   ~target times, so C = Theta(N * target). BEST case (every x > target): the
+ *   inner-loop body never executes, leaving only the outer scan plus the
+ *   Theta(target) init, i.e. Omega(N + target). Overall the running time is thus
+ *   O(N * target) (upper bound, from the worst case) and Omega(N + target).
+ *   This is PSEUDO-POLYNOMIAL: linear in the VALUE of target but exponential in
+ *   its bit-length log(target). No comparison-sort Omega(n log n) bound applies
+ *   -- this is a boolean reachability DP, not a comparison sort.
+ *
  * Key points:
  *   - Boolean DP: OR-aggregate instead of min/max. Same 0/1 loop discipline
  *     (descending target) to forbid reusing an element.

@@ -37,6 +37,35 @@
  *   +---------------------+-----------------+---------------------------------+
  *   Pseudo-polynomial: W is a magnitude, not an input length.
  *
+ * Complexity derivation (DP states * work per transition):
+ *   2D TABULATION. Two nested loops, body O(1):
+ *       C(N, W) = SUM_{i=1}^{N} SUM_{w=0}^{W} O(1)
+ *               = SUM_{i=1}^{N} (W + 1)
+ *               = N * (W + 1)
+ *               = O(N * W).
+ *     Equivalently there are (N+1)*(W+1) DP cells dp[i][w], each filled by a
+ *     single max of two already-computed cells -> O(1) per cell -> O(N * W).
+ *   1D ROLLING ARRAY. Same outer N passes; the inner loop runs w = W down to
+ *   wt[i], i.e. (W - wt[i] + 1) steps:
+ *       C(N, W) = SUM_{i=0}^{N-1} (W - wt[i] + 1)
+ *               <= SUM_{i=0}^{N-1} (W + 1)
+ *               = N * (W + 1) = O(N * W).
+ *     Space drops from O(N*W) to O(W); the time is unchanged. Both forms are
+ *     PSEUDO-POLYNOMIAL: encoding W takes only ~log W bits, so O(N*W) is
+ *     exponential in the bit-length of W, not polynomial in the input SIZE.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants); take g = N * W:
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g   for N,W >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f          for N,W >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The 2D version fills exactly N*(W+1) cells for EVERY input, so f = N*(W+1)
+ *   and the time is Theta(N * W): input-independent, best = average = worst.
+ *   The 1D version does SUM_i (W - wt[i] + 1) bodies, squeezed between Omega(N)
+ *   (all weights ~ W) and O(N*W), and Theta(N*W) when weights are small vs. W.
+ *   Nothing is sorted, so the comparison-sort Omega(n log n) bound does not
+ *   apply; the O(N*W) cost is pseudo-polynomial as noted above.
+ *
  * Key points:
  *   - Loop direction is the whole trick: DESCENDING w => each item used once.
  *   - Bottom-up tabulation shown as the primary method; the 1D form is the

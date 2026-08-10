@@ -31,6 +31,51 @@
  *   Extra space is only the O(L) call stack -- we mutate the grid in place with
  *   a sentinel rather than allocating a separate visited matrix.
  *
+ * Complexity derivation (backtracking state-space tree):
+ *   Fix ONE starting cell. Matching proceeds letter by letter; after CHOOSE-ing
+ *   the current cell the search branches into up to 4 neighbours to place the
+ *   next letter, and the recursion depth equals the word length L (indices
+ *   idx = 0..L-1). Let T(L) count the nodes visited to match L remaining letters
+ *   from a given cell:
+ *
+ *       T(L) = 4 * T(L-1) + c ,     T(1) = c0        (base case: last letter)
+ *
+ *   Unfold the recursion tree (branching factor 4, height L) and count nodes:
+ *
+ *       level d      #nodes      letters left     work on the level
+ *       ---------    --------    -------------    -------------------
+ *       d = 0        1           L                c
+ *       d = 1        4           L-1              4*c
+ *       d = 2        16          L-2              16*c
+ *       ...          ...         ...              ...
+ *       d = L-1      4^(L-1)     1                4^(L-1)*c
+ *
+ *   Summing the geometric series over the L levels:
+ *
+ *       T(L) = SUM_{d=0}^{L-1} c*4^d = c*(4^L - 1)/(4 - 1) = O(4^L)
+ *
+ *   The outer loop in exists() launches this search from every one of the R*C
+ *   cells, so the total worst-case work is R*C * O(4^L) = O(R * C * 4^L), matching
+ *   the table. (A tighter bound is 4*3^(L-1) per start: after the first step the
+ *   cell we came from is marked '#' and pruned, leaving only 3 fresh neighbours;
+ *   mismatch/reuse pruning kills almost all of the tree in practice.)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants, g the reference function):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g   for sizes >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f          for sizes >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The running time is DATA-DEPENDENT (pruning + early success), so bounds differ
+ *   by case, with g = R*C*4^L:
+ *     WORST  (word absent, so no start succeeds early and every pruned tree is
+ *            walked to exhaustion):  f <= c2 * R*C*4^L  =>  time is O(R*C*4^L).
+ *     BEST   (word empty, or its first letter matches nowhere, or a match is found
+ *            on the very first path tried):  as little as Theta(1) / Theta(L).
+ *   Hence OVERALL the algorithm is O(R*C*4^L) (upper bound, from the worst case)
+ *   and Omega(1) (lower bound, from the best case); best != worst, so there is no
+ *   single Theta across all inputs. The comparison-sort Omega(n log n) bound is
+ *   irrelevant here -- this is a grid reachability search, not a sort.
+ *
  * Key points / when to use:
  *   - Backtracking that undoes state by RESTORING the grid cell, not a side set.
  *   - The "requires backtracking" case: a promising prefix hits a dead end and

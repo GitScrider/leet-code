@@ -35,6 +35,51 @@
  *   (Binary/golden-section search uses fewer f-calls per step, but ternary is
  *   the clearest to reason about.)
  *
+ * Complexity derivation (recurrence -> iteration table -> summation):
+ *   Let n = hi - lo + 1 be the number of integer points in the range. Each
+ *   iteration evaluates f at the two probes m1, m2 and discards ONE outer third:
+ *   lo = m1+1 drops [lo..m1] (~n/3 points), hi = m2-1 drops [m2..hi] (~n/3
+ *   points). Hence roughly 2/3 of the range SURVIVES each step. Let T(n) count
+ *   the iterations on a range of n points:
+ *
+ *       T(n) = T(2n/3) + c ,        T(1) = c0    (base: loop ends when lo==hi)
+ *
+ *   where c = 2 evaluations of f + O(1) bookkeeping. Unfold as an iteration
+ *   table (only the surviving width matters):
+ *
+ *       iteration k    surviving size      f-evals on the step
+ *       -----------    ----------------    -------------------
+ *       k = 0          n                   2
+ *       k = 1          (2/3) n             2
+ *       k = 2          (2/3)^2 n           2
+ *       ...            ...                 ...
+ *       k = K          (2/3)^K n           2
+ *
+ *   The loop stops when (2/3)^K n <= 1, i.e. (3/2)^K >= n, i.e. K = log_{3/2} n.
+ *   Summing the constant per-step work:
+ *
+ *       T(n) = SUM_{k=0}^{log_{3/2} n} c = c*(log_{3/2} n + 1) = O(log_{3/2} n)
+ *
+ *   Master Theorem (a=1, b=3/2, f=Theta(1)): n^(log_b a) = n^0 = 1 -> case 2 ->
+ *   T(n) = Theta(log n). NOTE on the base: the header writes O(log3 n) for the
+ *   "remove 1/3" intuition, but the true per-step factor is 3/2 because 2/3
+ *   survives. That is no asymptotic difference: log_3 n, log_{3/2} n and log2 n
+ *   differ only by a constant (log_b n = ln n / ln b), so O(log3 n) =
+ *   O(log_{3/2} n) = O(log n) -- the same Theta class the table states.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The loop always shrinks [lo..hi] to a single point regardless of where the
+ *   peak sits, so the work is INPUT-INDEPENDENT: the count is c*(log_{3/2} n + 1)
+ *   for every unimodal input. With g = log n: c1*log n <= T(n) <= c2*log n for
+ *   n >= 2  =>  T(n) = Theta(log n). Hence best = average = worst = Theta(log3 n),
+ *   a single tight bound (no per-case split). This is a SEARCH, not a sort, so
+ *   the comparison-sort lower bound Omega(n log n) does not apply; the relevant
+ *   optimum for shrinking a range is Theta(log n).
+ *
  * Key points / when to use:
  *   - Requires the function to be UNIMODAL over the range (single peak/valley).
  *     If it is not, the result is meaningless.

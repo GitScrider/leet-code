@@ -28,6 +28,42 @@
  *   |           | (output list not counted).                              |
  *   +-----------+---------------------------------------------------------+
  *
+ * Complexity derivation (backtracking state-space tree, cut placement):
+ *   Between the n characters there are n-1 gaps; each gap is independently a cut
+ *   or not, so there are at most 2^(n-1) distinct partitions -- the leaves of the
+ *   recursion tree. The isPalindrome test PRUNES any branch whose leading piece
+ *   is not a palindrome; in the worst case (all characters equal, e.g. "aaaa")
+ *   every substring is a palindrome, nothing is pruned, and all 2^(n-1) partitions
+ *   are produced. Count of complete partitions reachable from `start`:
+ *
+ *       P(start) = SUM_{end=start}^{n-1} [ s[start..end] palindrome ] * P(end+1)
+ *
+ *   with P(n) = 1 (a complete partition). Work: each internal node does O(1)
+ *   bookkeeping (push_back/pop_back) plus a palindrome scan, while each of the
+ *   up-to-2^(n-1) complete partitions is COPIED into `out` at the base case, whose
+ *   pieces total n characters -> O(n) per partition. That output copying dominates:
+ *
+ *       T(n) = SUM_{partitions} O(n) <= 2^(n-1) * O(n) = O(n * 2^(n-1))
+ *
+ *   which is exactly the stated worst-case bound. It is exponential because the
+ *   number of valid partitions is itself exponential (2^(n-1) for "a^n").
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)  for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The cost is DATA-DEPENDENT (pruning), so it splits by case:
+ *     WORST  s = "a^n": no prune fires, all 2^(n-1) partitions are emitted, each
+ *            O(n) to copy  =>  worst-case time is Theta(n * 2^(n-1))  (tight).
+ *     BEST   s has all-distinct characters: only the all-singletons partition
+ *            survives; every 2+ character prefix fails isPalindrome in O(1), so
+ *            the n start positions do O(n) checks each  =>  Theta(n^2).
+ *   Hence OVERALL the running time is O(n * 2^(n-1)) (upper bound, from the worst
+ *   case) and Omega(n^2) (lower bound, from the best case); best != worst, so
+ *   there is no single Theta across all inputs. The comparison-sort Omega(n log n)
+ *   bound is irrelevant -- this enumerates partitions, it does not sort.
+ *
  * Key points / when to use:
  *   - Textbook "partition into valid pieces" backtracking (also: word break,
  *     restore IP addresses share this shape).

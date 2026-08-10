@@ -35,6 +35,42 @@
  *   | Space | O(V + E)  |   disc/low arrays + recursion stack
  *   +-------+-----------+
  *
+ * Complexity derivation (DFS traversal counted over V and E):
+ *   The recursion visits every vertex EXACTLY once: dfs(u) is entered only when
+ *   disc[u] == -1, and its first line sets disc[u], so u is never re-entered.
+ *   Inside dfs(u) the for-loop iterates over adj[u] once, i.e. deg(u) steps, and
+ *   each step is O(1) work (a comparison, a std::min, maybe one emplace_back).
+ *   Charging 1 unit to discover a vertex plus 1 unit per incident-edge scan:
+ *
+ *       C(V,E) = SUM_{u in V} ( 1 + deg(u) )
+ *              = SUM_{u in V} 1   +   SUM_{u in V} deg(u)
+ *              =        V         +         2E
+ *              = V + 2E
+ *              = O(V + E)
+ *
+ *   The middle step uses the handshake lemma: an undirected edge is stored at
+ *   BOTH endpoints, so SUM_{u} deg(u) = 2E. The driver adds one O(V) loop to
+ *   launch a DFS per unvisited vertex plus two O(V) result-collection scans, all
+ *   dominated by the V + 2E traversal. (The final std::sort of the bridge list
+ *   costs O(B log B) with B <= V-1 bridges -- a lower-order add-on for test
+ *   determinism, not part of the core linear-time algorithm.)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants; "size" = V + E):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g   for size >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f          for size >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The exact count is f(V,E) = V + 2E; take g(V,E) = V + E:
+ *     upper  O:     V + 2E <= 2*(V + E)   for E >= 0  => O(V + E)     (c2 = 2)
+ *     lower  Omega: V + 2E >=  1*(V + E)  for E >= 0  => Omega(V + E) (c1 = 1)
+ *     tight  Theta: both hold (c1 = 1, c2 = 2)        => Theta(V + E)
+ *   The traversal is INPUT-INDEPENDENT for a fixed (V,E): every vertex is
+ *   discovered once and every edge scanned twice (once from each endpoint) no
+ *   matter the graph's shape, so best = average = worst = Theta(V + E). No
+ *   comparison-sort Omega(n log n) barrier applies here -- this is a linear
+ *   graph scan, not a sort (the only sort, of the <= V-1 bridges, is an
+ *   auxiliary output step outside the core traversal).
+ *
  * Key points / assumptions:
  *   - Graph is UNDIRECTED (edges stored both ways), simple (no parallel edges
  *     or self-loops in the tests). Unweighted.

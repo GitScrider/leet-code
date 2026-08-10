@@ -34,6 +34,32 @@
  *   +---------------------+-----------------+---------------------------------+
  *   Pseudo-polynomial in the capacity magnitude W.
  *
+ * Complexity derivation (DP states * work per transition):
+ *   1D TABULATION. Two nested loops, body O(1):
+ *       C(N, W) = SUM_{w=1}^{W} SUM_{i=0}^{N-1} O(1)
+ *               = SUM_{w=1}^{W} N
+ *               = N * W
+ *               = O(N * W).
+ *     Equivalently there are (W+1) DP states dp[w]; computing each takes a max
+ *     over all N item types (an O(N) transition) -> (W+1) * N = O(N * W). The
+ *     wt[i] <= w guard skips work INSIDE the body but not the loop iteration,
+ *     so the W*N body-execution count is exact. Unlike 0/1 knapsack the state is
+ *     1D (item reuse is allowed), yet the time is identical because each of the
+ *     W amounts still scans all N items.
+ *     PSEUDO-POLYNOMIAL: W is a magnitude in ~log W bits, so O(N*W) is
+ *     exponential in the bit-length of W, not polynomial in the input SIZE.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants); take g = N * W:
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g   for N,W >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f          for N,W >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   The inner body runs exactly W*N times for EVERY input (data-independent: the
+ *   guard changes the value written, never whether the iteration runs), so
+ *   f = W*N and the running time is Theta(N * W): best = average = worst.
+ *   Nothing is sorted or compared for order, so the comparison-sort lower bound
+ *   Omega(n log n) does not apply; the O(N*W) cost is pseudo-polynomial.
+ *
  * Key points:
  *   - Same table shape as 0/1; ONLY the inner-loop direction changes.
  *   - Coin-change "min coins" is unbounded knapsack with val=1 and min instead
