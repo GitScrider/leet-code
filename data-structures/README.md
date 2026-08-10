@@ -47,9 +47,16 @@ g++ -std=c++17 -Wall -Wextra linear/dynamic_array.cpp -o demo && ./demo
 | Segment Tree | range query + point update O(log n) | [segment_tree.cpp](trees/segment_tree.cpp) |
 | Fenwick Tree (BIT) | prefix sum + point update O(log n) | [fenwick_tree.cpp](trees/fenwick_tree.cpp) |
 
+### Hashing
+
+| Structure | Key operations (Big-O) | File |
+|---|---|---|
+| Hash Table — separate chaining | put/get/erase O(1) avg, O(n) worst | [hash_table_chaining.cpp](hashing/hash_table_chaining.cpp) |
+| Hash Table — open addressing (linear probing) | put/get/erase O(1) avg, O(n) worst | [hash_table_open_addressing.cpp](hashing/hash_table_open_addressing.cpp) |
+| Hash functions tour (djb2, FNV-1a, rolling, int mix) | hash O(L) | [hash_functions.cpp](hashing/hash_functions.cpp) |
+
 ### Coming next
 
-- **Hashing** — hash table (separate chaining + open addressing)
 - **Graphs** — adjacency list/matrix, union-find (DSU)
 
 ---
