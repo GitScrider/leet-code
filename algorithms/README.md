@@ -82,12 +82,65 @@ counting/radix/bucket operate on integers.
 | Bipartite check | O(V+E) | [bipartite_check.cpp](graphs/bipartite_check.cpp) |
 | Articulation points & bridges | O(V+E) | [articulation_points_bridges.cpp](graphs/articulation_points_bridges.cpp) |
 
-## Coming next
+## Dynamic Programming
 
-- **Dynamic programming** — knapsack, LIS, LCS, edit distance, coin change
-- **Greedy** — activity selection, Huffman, interval scheduling
-- **Strings** — KMP, Rabin-Karp, Z-algorithm
-- **Math** — sieve of Eratosthenes, gcd/lcm, fast exponentiation, modular arithmetic
+| Problem | Time | File |
+|---|---|---|
+| Climbing stairs | O(n) | [climbing_stairs.cpp](dynamic-programming/climbing_stairs.cpp) |
+| Kadane's max subarray | O(n) | [kadane_max_subarray.cpp](dynamic-programming/kadane_max_subarray.cpp) |
+| House robber | O(n) | [house_robber.cpp](dynamic-programming/house_robber.cpp) |
+| Coin change (min + ways) | O(n·amount) | [coin_change.cpp](dynamic-programming/coin_change.cpp) |
+| 0/1 knapsack | O(n·W) | [knapsack_01.cpp](dynamic-programming/knapsack_01.cpp) |
+| Unbounded knapsack | O(n·W) | [unbounded_knapsack.cpp](dynamic-programming/unbounded_knapsack.cpp) |
+| Subset sum & partition | O(n·sum) | [subset_sum_partition.cpp](dynamic-programming/subset_sum_partition.cpp) |
+| Rod cutting | O(n²) | [rod_cutting.cpp](dynamic-programming/rod_cutting.cpp) |
+| Longest common subsequence | O(n·m) | [longest_common_subsequence.cpp](dynamic-programming/longest_common_subsequence.cpp) |
+| Longest increasing subsequence | O(n log n) | [longest_increasing_subsequence.cpp](dynamic-programming/longest_increasing_subsequence.cpp) |
+| Edit distance | O(n·m) | [edit_distance.cpp](dynamic-programming/edit_distance.cpp) |
+| Matrix chain multiplication | O(n³) | [matrix_chain_multiplication.cpp](dynamic-programming/matrix_chain_multiplication.cpp) |
+| Longest palindromic subsequence | O(n²) | [longest_palindromic_subsequence.cpp](dynamic-programming/longest_palindromic_subsequence.cpp) |
+| Grid paths (unique + min sum) | O(n·m) | [grid_paths.cpp](dynamic-programming/grid_paths.cpp) |
+| Word break | O(n²) | [word_break.cpp](dynamic-programming/word_break.cpp) |
+
+## Greedy
+
+| Problem | Time | File |
+|---|---|---|
+| Activity selection | O(n log n) | [activity_selection.cpp](greedy/activity_selection.cpp) |
+| Fractional knapsack | O(n log n) | [fractional_knapsack.cpp](greedy/fractional_knapsack.cpp) |
+| Huffman coding | O(n log n) | [huffman_coding.cpp](greedy/huffman_coding.cpp) |
+| Job sequencing | O(n log n) | [job_sequencing.cpp](greedy/job_sequencing.cpp) |
+| Merge intervals | O(n log n) | [merge_intervals.cpp](greedy/merge_intervals.cpp) |
+| Gas station | O(n) | [gas_station.cpp](greedy/gas_station.cpp) |
+| Minimum platforms | O(n log n) | [minimum_platforms.cpp](greedy/minimum_platforms.cpp) |
+| Coin change (greedy + counterexample) | O(n) | [coin_change_greedy.cpp](greedy/coin_change_greedy.cpp) |
+
+## Strings
+
+| Algorithm | Time | File |
+|---|---|---|
+| Naive matching (baseline) | O(n·m) | [naive_string_match.cpp](strings/naive_string_match.cpp) |
+| KMP | O(n+m) | [kmp.cpp](strings/kmp.cpp) |
+| Rabin-Karp (rolling hash) | O(n+m) avg | [rabin_karp.cpp](strings/rabin_karp.cpp) |
+| Z-algorithm | O(n+m) | [z_algorithm.cpp](strings/z_algorithm.cpp) |
+| Manacher (longest palindrome) | O(n) | [manacher.cpp](strings/manacher.cpp) |
+| Boyer-Moore | O(n/m) best | [boyer_moore.cpp](strings/boyer_moore.cpp) |
+| Suffix array + LCP (Kasai) | O(n log n) | [suffix_array_lcp.cpp](strings/suffix_array_lcp.cpp) |
+| Aho-Corasick (multi-pattern) | O(n+m+z) | [aho_corasick.cpp](strings/aho_corasick.cpp) |
+
+## Math / Number Theory
+
+| Algorithm | Time | File |
+|---|---|---|
+| GCD/LCM + extended Euclid | O(log n) | [gcd_lcm_extended.cpp](math/gcd_lcm_extended.cpp) |
+| Sieve of Eratosthenes | O(n log log n) | [sieve_of_eratosthenes.cpp](math/sieve_of_eratosthenes.cpp) |
+| Fast exponentiation (binary/modular) | O(log n) | [fast_exponentiation.cpp](math/fast_exponentiation.cpp) |
+| Modular inverse (Fermat + Euclid) | O(log n) | [modular_inverse.cpp](math/modular_inverse.cpp) |
+| Prime factorization | O(√n) | [prime_factorization.cpp](math/prime_factorization.cpp) |
+| Miller-Rabin primality | O(k log³ n) | [miller_rabin.cpp](math/miller_rabin.cpp) |
+| Combinatorics (nCr, Pascal, nCr mod p) | O(n) | [combinatorics.cpp](math/combinatorics.cpp) |
+| Euler's totient | O(√n) / sieve | [euler_totient.cpp](math/euler_totient.cpp) |
+| Matrix exponentiation (fast Fibonacci) | O(log n) | [matrix_exponentiation.cpp](math/matrix_exponentiation.cpp) |
 
 ---
 
