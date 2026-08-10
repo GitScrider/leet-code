@@ -34,10 +34,22 @@ g++ -std=c++17 -Wall -Wextra linear/dynamic_array.cpp -o demo && ./demo
 | Queue (FIFO, ring buffer) | enqueue/dequeue O(1) | [queue.cpp](linear/queue.cpp) |
 | Deque (ring buffer) | push/pop at both ends amortized O(1) | [deque.cpp](linear/deque.cpp) |
 
+### Trees
+
+| Structure | Key operations (Big-O, avg) | File |
+|---|---|---|
+| Binary Tree (traversals) | inorder/preorder/postorder/level-order O(n) | [binary_tree.cpp](trees/binary_tree.cpp) |
+| Binary Search Tree | search/insert/remove O(log n) avg, O(n) worst | [binary_search_tree.cpp](trees/binary_search_tree.cpp) |
+| Binary Heap (min-heap) | push/pop O(log n), peek O(1), build O(n) | [binary_heap.cpp](trees/binary_heap.cpp) |
+| AVL Tree | search/insert/remove O(log n) guaranteed | [avl_tree.cpp](trees/avl_tree.cpp) |
+| Red-Black Tree | search/insert/remove O(log n) guaranteed | [red_black_tree.cpp](trees/red_black_tree.cpp) |
+| Trie (prefix tree) | insert/search/startsWith O(L), L = key length | [trie.cpp](trees/trie.cpp) |
+| Segment Tree | range query + point update O(log n) | [segment_tree.cpp](trees/segment_tree.cpp) |
+| Fenwick Tree (BIT) | prefix sum + point update O(log n) | [fenwick_tree.cpp](trees/fenwick_tree.cpp) |
+
 ### Coming next
 
 - **Hashing** — hash table (separate chaining + open addressing)
-- **Trees** — BST, AVL, binary heap, trie, segment tree, Fenwick (BIT)
 - **Graphs** — adjacency list/matrix, union-find (DSU)
 
 ---
