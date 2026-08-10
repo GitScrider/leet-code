@@ -17,6 +17,37 @@
  *   already-sorted data performs zero swaps and stops. Average/worst are
  *   quadratic because up to ~n passes each scan up to ~n adjacent pairs.
  *
+ * Complexity derivation (instruction count / summation):
+ *   Worst case (reverse-sorted input, so the early-exit never triggers). On
+ *   pass i (i = 0, 1, ..., n-2) the inner loop scans the still-unsorted prefix
+ *   and performs (n - 1 - i) adjacent COMPARISONS. Total comparisons:
+ *
+ *       C(n) = SUM_{i=0}^{n-2} (n - 1 - i)
+ *            = (n-1) + (n-2) + ... + 2 + 1        (substitute k = n-1-i)
+ *            = SUM_{k=1}^{n-1} k
+ *            = (n-1) * n / 2                       (arithmetic series, Gauss)
+ *            = (n^2 - n) / 2
+ *            = O(n^2)
+ *
+ *   Each comparison can trigger at most one swap, so swaps are also <= (n^2-n)/2
+ *   = O(n^2) in the worst case. Best case (already sorted): the early-exit flag
+ *   stops after ONE pass of (n-1) comparisons and 0 swaps, so C(n) = n-1 = O(n).
+ *   Dropping the low-order term and the constant 1/2 leaves the tight bound.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   This algorithm is ADAPTIVE, so the bound DEPENDS ON THE INPUT CASE:
+ *     WORST case  C(n) = (n^2 - n)/2. With g=n^2, (1/4)n^2 <= C(n) <= (1/2)n^2
+ *                 for n >= 2  =>  worst-case time is Theta(n^2)  (tight).
+ *     BEST case   C(n) = n - 1  =>  best-case time is Theta(n)   (tight).
+ *   Over ALL possible inputs the running time is thus O(n^2) (upper bound, from
+ *   the worst case) and Omega(n) (lower bound, from the best case). It is NOT a
+ *   single Theta over all inputs precisely because best != worst -- that gap is
+ *   the whole reason a per-case Best/Average/Worst table is needed.
+ *
  * Properties:
  *   Stable?    yes  (only STRICTLY out-of-order adjacent pairs are swapped, so
  *                    equal elements never leapfrog one another)

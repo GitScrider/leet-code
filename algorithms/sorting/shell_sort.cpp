@@ -20,6 +20,40 @@
  *   pass is a gapped insertion sort, and shrinking gaps keep the total number
  *   of shifts far below the O(n^2) of plain insertion sort.
  *
+ * Complexity derivation (gap-sequence dependent -- no single closed form):
+ *   Let the gap sequence be h_t > ... > h_1 = 1. For a FIXED gap h the pass is a
+ *   gapped insertion sort over the h interleaved subsequences; across all of
+ *   them it touches ~n elements, so one h-pass costs
+ *
+ *       work(h) = O(n * s_h),   s_h = avg shifts per element at gap h
+ *
+ *   and the total is a SUM over the gaps actually used:
+ *
+ *       C(n) = SUM_{gap h in sequence} O(n * s_h)
+ *
+ *   The subtlety is that s_h depends on how "h-sorted" the earlier larger gaps
+ *   already left the array, which is why the sum resists a clean closed form and
+ *   is sequence-dependent:
+ *     - Halving gaps (n/2, n/4, ..., 1): a known-bad family keeps s_h ~ n on
+ *       adversarial input, so C(n) = SUM ~ Theta(n^2) in the worst case.
+ *     - Knuth 3h+1 (1, 4, 13, 40, ...), used here: elements travel O(sqrt n) per
+ *       pass over O(log n) passes, giving a PROVEN O(n^(3/2)) = O(n^1.5) worst.
+ *     - Sedgewick gaps: O(n^(4/3)) = O(n^1.33) worst case.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Because cost is governed by the gap sequence, the bounds are stated PER
+ *   sequence, not as one universal Theta:
+ *     upper  O:     O(n^2) worst for halving gaps; O(n^1.5) for Knuth 3h+1 here.
+ *     lower  Omega: Omega(n log n) for EVERY gap sequence -- the information-
+ *                   theoretic floor any comparison sort must pay.
+ *     tight  Theta: gap-sequence-dependent; for several practical sequences the
+ *                   exact worst-case Theta is STILL AN OPEN PROBLEM, so no single
+ *                   honest Theta can be quoted for Shell sort in general.
+ *
  * Properties:
  *   Stable?    NO   (gapped moves jump elements over equal ones far apart, so
  *                    equal keys can be reordered)

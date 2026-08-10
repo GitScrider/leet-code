@@ -19,6 +19,36 @@
  *   (d = floor(log_b(max)) + 1). Because d and b are fixed for a given input, this
  *   is effectively linear O(n) when d is small -- that is the whole appeal.
  *
+ * Complexity derivation (per-pass summation, non-comparison, LSD):
+ *   The algorithm runs d passes (d = number of base-b digits of the max value,
+ *   d = floor(log_b(max)) + 1). Each pass is a stable counting sort over the b
+ *   digit values, which by the counting-sort derivation costs c*(n + b): count n
+ *   elements + prefix-sum b slots + place n elements. Summing the d identical passes:
+ *
+ *       T(n) = SUM_{pass=1}^{d} c*(n + b)
+ *            = d * c*(n + b)
+ *            = Theta(d * (n + b))
+ *
+ *   No pass depends on how sorted the data already is, so the count is the same for
+ *   every input: best = average = worst = Theta(d*(n + b)). For fixed-width integers
+ *   (e.g. 32-bit keys) both d and b are CONSTANTS, so d*(n + b) collapses to Theta(n)
+ *   -- effectively linear. Auxiliary space is one b-slot count array plus an n-slot
+ *   output buffer, reused each pass = Theta(n + b).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants), with g = d*(n + b):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g   for size >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f          for size >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here the exact count is f = d*c*(n + b). Take g = d*(n + b):
+ *     lower  Omega:  c*g <= f                    => Omega(d*(n + b))
+ *     upper  O:      f <= c*g                     => O(d*(n + b))
+ *     tight  Theta:  both hold (c1 = c2 = c)      => Theta(d*(n + b))
+ *   Input-independent, so this Theta is tight for best = average = worst; with d, b
+ *   constant it is Theta(n). Like counting sort it beats the comparison lower bound
+ *   Omega(n log n) because it NEVER compares two keys -- each digit is used directly
+ *   as a counting-sort index, escaping the decision-tree model.
+ *
  * Properties:
  *   Stable?    yes  (each digit pass is a stable counting sort; overall order kept)
  *   In-place?  no   (each pass uses a count array of size b and an output buffer)

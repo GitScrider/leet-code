@@ -27,6 +27,68 @@
  *   the classic worst case into the good case; randomizing the pivot instead
  *   would make the O(n^2) case astronomically unlikely for adversarial data.
  *
+ * Complexity derivation (recurrence -> recursion tree -> summation):
+ *   Let T(n) be the number of basic operations to sort n elements. Partitioning
+ *   a range of size m scans it once and costs c*m comparisons. What happens next
+ *   depends ENTIRELY on where the pivot lands, so quicksort has two regimes.
+ *
+ *   BEST / AVERAGE case -- a BALANCED split (pivot near the median) cuts the
+ *   range into two halves of size ~n/2:
+ *
+ *       T(n) = 2 * T(n/2) + c*n ,      T(1) = c0        (base case)
+ *
+ *   This is exactly merge sort's recurrence. Unfold it and count partition work:
+ *
+ *       level d      #nodes      size each        work on the level
+ *       ---------    --------    -------------    --------------------------
+ *       d = 0        1           n                c*n
+ *       d = 1        2           n/2              2 * c*(n/2)   = c*n
+ *       d = 2        4           n/4              4 * c*(n/4)   = c*n
+ *       d = k        2^k         n/2^k            2^k * c*(n/2^k) = c*n
+ *
+ *   Every level costs c*n and there are (log2 n + 1) levels, so:
+ *
+ *       T(n) = SUM_{d=0}^{log2 n} (c*n) = c*n * (log2 n + 1) = Theta(n log n)
+ *
+ *   Master Theorem (a=2, b=2, f(n)=c*n): n^(log_b a) = n^1 = n matches f(n)
+ *   -> case 2 -> T(n) = Theta(n^(log_b a) * log n) = Theta(n log n).
+ *
+ *   WORST case -- a maximally UNBALANCED split (e.g. the pivot is the smallest
+ *   or largest element every time, as with a naive pivot on sorted input): one
+ *   side gets n-1 elements and the other gets 0. The recursion degenerates into
+ *   a chain:
+ *
+ *       T(n) = T(n-1) + c*n ,          T(0) = c0        (base case)
+ *
+ *       level d      #nodes      size            work on the level
+ *       ---------    --------    ------------    -------------------
+ *       d = 0        1           n               c*n
+ *       d = 1        1           n-1             c*(n-1)
+ *       d = k        1           n-k             c*(n-k)
+ *
+ *   There are n levels and NO branching, so summing the work:
+ *
+ *       T(n) = SUM_{k=1}^{n} c*k = c * (1 + 2 + ... + n)
+ *            = c * n(n+1)/2                       (arithmetic series, Gauss)
+ *            = Theta(n^2)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 are positive constants):
+ *     f(n) = O(g(n))      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)   for n >= n0
+ *     f(n) = Omega(g(n))  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f(n) = Theta(g(n))  iff  f = O(g) AND f = Omega(g)
+ *   The cost is DATA-DEPENDENT (it hinges on pivot quality), so we bound per case:
+ *     WORST case  T(n) = c*n(n+1)/2. With g=n^2, (c/2)n^2 <= T(n) <= c*n^2 for
+ *                 n >= 1  =>  worst-case time is Theta(n^2)  (tight).
+ *     BEST case   T(n) = c*n*(log2 n + 1)  =>  best-case time is Theta(n log n).
+ *   Any comparison sort must make >= log2(n!) = Omega(n log n) comparisons, so no
+ *   input can do better than n log n -- that is the lower bound and it coincides
+ *   with the best case. Over ALL inputs the running time is therefore O(n^2)
+ *   (upper, from the worst case) and Omega(n log n) (lower, from the best case);
+ *   it is NOT a single Theta because best (n log n) != worst (n^2). The AVERAGE
+ *   over random pivots is Theta(n log n) -- most splits are "good enough" -- and
+ *   MEDIAN-OF-THREE makes the Theta(n^2) worst case practically unreachable.
+ *
  * Properties:
  *   - Stable?    no   (partition swaps reorder equal keys).
  *   - In-place?  yes  (only O(log n) stack; no O(n) data buffer).

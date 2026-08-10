@@ -18,6 +18,38 @@
  *   and no shift. Worst case (reverse sorted) shifts the whole prefix every
  *   step, giving 1+2+...+(n-1) = O(n^2) moves.
  *
+ * Complexity derivation (instruction count / summation):
+ *   Insertion sort is ADAPTIVE: the inner while-loop stops as soon as it meets a
+ *   prefix element <= key, so the shift count equals the number of INVERSIONS.
+ *   WORST case (reverse-sorted input): inserting v[i] the key is smaller than
+ *   all i elements before it, so it shifts back i places -- i comparisons and i
+ *   moves. Summing over the outer loop i = 1 .. n-1:
+ *
+ *       C(n) = SUM_{i=1}^{n-1} i
+ *            = 1 + 2 + ... + (n-1)
+ *            = n * (n-1) / 2                       (arithmetic series, Gauss)
+ *            = (n^2 - n) / 2
+ *            = Theta(n^2)
+ *
+ *   BEST case (already sorted): key >= v[i-1] on the very first test, so the
+ *   while-loop makes ONE comparison and zero moves per step:
+ *
+ *       C(n) = SUM_{i=1}^{n-1} 1 = n - 1 = Theta(n)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   This algorithm is data-dependent, so the bound is PER-CASE:
+ *     WORST case  C(n) = (n^2 - n)/2. With g = n^2, (1/4)n^2 <= C(n) <= (1/2)n^2
+ *                 for n >= 2  =>  worst-case time is Theta(n^2)  (tight).
+ *     BEST case   C(n) = n - 1  =>  best-case time is Theta(n)   (tight).
+ *   Over ALL inputs the running time is therefore O(n^2) (upper bound, from the
+ *   worst case) and Omega(n) (lower bound, from the best case). There is NO
+ *   single Theta over all inputs precisely because best != worst -- that gap is
+ *   exactly why insertion sort shines on nearly-sorted data.
+ *
  * Properties:
  *   Stable?    yes  (we shift only elements STRICTLY greater than the key, so
  *                    an equal element is never moved past its equal peer)

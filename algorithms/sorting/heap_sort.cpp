@@ -26,6 +26,50 @@
  *   height. n * log n dominates, and this holds for every input -- heap sort is
  *   not sensitive to initial order, so best = average = worst.
  *
+ * Complexity derivation (two phases: build-heap + n extractions):
+ *   Model the array as a complete binary tree of height H = floor(log2 n). Let a
+ *   siftDown starting at height h cost at most c*h (it drops at most h levels).
+ *
+ *   PHASE (a) -- BUILD the heap bottom-up. Here is the classic surprise: it is
+ *   Theta(n), NOT n log n. The reason is that MOST nodes are shallow. The number
+ *   of nodes at height h is at most ceil(n / 2^(h+1)), and each is sifted down in
+ *   c*h work. Summing over all heights:
+ *
+ *       Build(n) = SUM_{h=0}^{H} ceil(n / 2^(h+1)) * c*h
+ *                <= c*n * SUM_{h=0}^{inf} h / 2^(h+1)
+ *                =  (c*n / 2) * SUM_{h=0}^{inf} h / 2^h
+ *
+ *   The tail is a convergent arithmetico-geometric series with a known value:
+ *
+ *       SUM_{h=0}^{inf} h / 2^h = (1/2) / (1 - 1/2)^2 = 2        (finite!)
+ *
+ *   so Build(n) <= (c*n / 2) * 2 = c*n = Theta(n). Tall nodes are expensive but
+ *   rare; short nodes are cheap but many -- the weighting makes the sum collapse.
+ *
+ *   PHASE (b) -- EXTRACT n-1 times. Swap the root to the end and siftDown the new
+ *   root over a heap of current size i, costing c*log2(i):
+ *
+ *       Extract(n) = SUM_{i=2}^{n} c * log2(i) = c * log2(n!)
+ *                  = c * (n log2 n - n log2 e + O(log n))       (Stirling)
+ *                  = Theta(n log n)
+ *
+ *   TOTAL:  T(n) = Build(n) + Extract(n) = Theta(n) + Theta(n log n)
+ *              = Theta(n log n)        (the n log n term dominates the linear one)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 are positive constants):
+ *     f(n) = O(g(n))      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)   for n >= n0
+ *     f(n) = Omega(g(n))  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f(n) = Theta(g(n))  iff  f = O(g) AND f = Omega(g)
+ *   The work is DATA-INDEPENDENT: siftDown always walks toward the leaves the same
+ *   way regardless of key values, so no input is faster or slower by more than a
+ *   constant. Take g(n) = n log n; the exact count f(n) = Theta(n log n) gives:
+ *     upper  O:     f(n) <= c2 * (n log2 n)  for n >= 2   => T(n) = O(n log n)
+ *     lower  Omega: f(n) >= c1 * (n log2 n)  for n >= 2   => T(n) = Omega(n log n)
+ *     tight  Theta: both hold                             => T(n) = Theta(n log n)
+ *   Because the running time does not depend on the initial order, the SAME tight
+ *   bound Theta(n log n) holds for best = average = worst -- no per-case gap.
+ *
  * Properties:
  *   Stable?    no  (long-range swaps of the root with the tail reorder equal keys)
  *   In-place?  yes (only O(1) extra memory; the heap lives in the same array)

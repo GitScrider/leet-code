@@ -19,6 +19,38 @@
  *   (n = element count, k = size of the key range. If k dominates n, e.g. k ~ n^2,
  *    counting sort loses its edge -- the k term is why the range must stay bounded.)
  *
+ * Complexity derivation (instruction count / summation, non-comparison):
+ *   Three sequential linear passes; no element is ever compared against another.
+ *   Let n = element count and k = size of the key range (keys in [0, k]).
+ *     Pass 1 -- count occurrences: one increment per input element
+ *         P1 = SUM_{i=0}^{n-1} 1 = n
+ *     Pass 2 -- prefix sums over the (k+1)-slot count array: one add per slot
+ *         P2 = SUM_{v=1}^{k} 1 = k
+ *     Pass 3 -- place each element at its key index (right-to-left scan):
+ *         P3 = SUM_{i=0}^{n-1} 1 = n
+ *   Total operations:
+ *
+ *       C(n,k) = P1 + P2 + P3 = n + k + n = 2n + k = Theta(n + k)
+ *
+ *   No data-dependent branch exists: the three sums are identical for every input
+ *   of size n over range k, so best = average = worst = Theta(n + k). Auxiliary
+ *   space is the count array (k+1) plus the output buffer (n) = Theta(n + k).
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants), with g = n + k:
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*(n+k)   for n+k >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*(n+k) <= f          for n+k >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here the exact count is f = 2n + k. Take g = n + k:
+ *     lower  Omega:  1*(n+k) <= 2n + k           => Omega(n + k)
+ *     upper  O:      2n + k <= 2*(n+k)            => O(n + k)
+ *     tight  Theta:  both hold (c1 = 1, c2 = 2)   => Theta(n + k)
+ *   Input-independent, so this Theta(n + k) is tight for best = average = worst.
+ *   The comparison-sort lower bound Omega(n log n) does NOT apply here: that bound
+ *   counts decisions in a comparison decision tree, but counting sort makes ZERO
+ *   key comparisons -- it uses each key directly as an array INDEX. Escaping the
+ *   decision-tree model is exactly how it beats n log n when k = O(n).
+ *
  * Properties:
  *   Stable?    yes  (reverse fill with pre-decremented prefix positions)
  *   In-place?  no   (needs a count array of size k+1 and an output buffer of size n)

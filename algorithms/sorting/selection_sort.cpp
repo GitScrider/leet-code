@@ -16,6 +16,37 @@
  *   suffix regardless of order, so there is no cheap best case. Its one virtue
  *   is exactly n-1 swaps (O(n) writes) -- handy when writes are expensive.
  *
+ * Complexity derivation (instruction count / summation):
+ *   Selection sort is NOT adaptive: the inner min-scan always inspects the whole
+ *   unsorted suffix, so the count is identical on every input. On pass i
+ *   (i = 0, 1, ..., n-2) the inner loop runs j = i+1 .. n-1, i.e. (n-1-i)
+ *   COMPARISONS. Total comparisons:
+ *
+ *       C(n) = SUM_{i=0}^{n-2} (n - 1 - i)
+ *            = (n-1) + (n-2) + ... + 2 + 1        (substitute k = n-1-i)
+ *            = SUM_{k=1}^{n-1} k
+ *            = n * (n-1) / 2                       (arithmetic series, Gauss)
+ *            = (n^2 - n) / 2
+ *            = Theta(n^2)
+ *
+ *   This holds for best = average = worst: no branch shortens the scan, so the
+ *   comparison count is input-INDEPENDENT (contrast insertion/bubble, which
+ *   exit early on sorted data). SWAPS are the cheap part: at most one per pass,
+ *   hence at most n-1 = Theta(n) writes -- selection sort's one virtue.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f(n) = O(g)      iff  EXISTS c2, n0 :       f(n) <= c2*g(n)  for n >= n0
+ *     f(n) = Omega(g)  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)        for n >= n0
+ *     f(n) = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Here f(n) = (n^2 - n)/2 with g(n) = n^2. For n >= 2 (using n <= n^2/2):
+ *     lower  Omega: f(n) >= (1/4) n^2                            => Omega(n^2)
+ *     upper  O:     f(n) <= (1/2) n^2                            => O(n^2)
+ *     tight  Theta: c1 = 1/4, c2 = 1/2                           => Theta(n^2)
+ *   Because the work is input-independent, this SAME Theta(n^2) is the tight
+ *   bound for best, average AND worst -- selection sort is Omega(n^2) even on
+ *   already-sorted input, unlike insertion/bubble which drop to Theta(n) there.
+ *
  * Properties:
  *   Stable?    NO   (see note below)
  *   In-place?  yes  (O(1) extra memory)

@@ -11,12 +11,48 @@
  *   so each of the ~n buckets holds O(1) elements and the per-bucket sorts are cheap.
  *
  * Complexity:
- *   Case    | Time      | Aux Space
- *   --------+-----------+-----------
- *   Best    | O(n + k)  | O(n + k)
- *   Average | O(n + k)  | O(n + k)   (k = number of buckets; uniform input)
- *   Worst   | O(n^2)    | O(n + k)   (all values collide into ONE bucket, whose
- *                                     internal sort then degrades to O(n^2)/O(n log n))
+ *   Case    | Time        | Aux Space
+ *   --------+-------------+-----------
+ *   Best    | O(n + k)    | O(n + k)
+ *   Average | O(n + k)    | O(n + k)   (k = number of buckets; uniform input)
+ *   Worst   | O(n log n)  | O(n + k)   (all values collide into ONE bucket, whose
+ *                                       internal std::stable_sort then costs O(n log n))
+ *
+ * Complexity derivation (expected-value summation, distribution sort):
+ *   Scatter n values into m = ~n buckets, sort each bucket, concatenate. Let n_i be
+ *   the number of items landing in bucket i (so SUM_{i=0}^{m-1} n_i = n). Scatter and
+ *   gather are linear, O(n); the variable cost is the per-bucket sort. This code sorts
+ *   each bucket with std::stable_sort, whose worst case is O(n_i log n_i). Total:
+ *
+ *       T(n) = O(n) + SUM_{i=0}^{m-1} O(n_i log n_i)
+ *
+ *   AVERAGE case (values uniform over the range, m = n buckets): each item lands in a
+ *   given bucket independently with probability 1/n, so n_i ~ Binomial(n, 1/n). Since
+ *   n_i log n_i <= n_i^2, bound the per-bucket cost by the second moment E[n_i^2]:
+ *       E[n_i^2] = Var(n_i) + (E[n_i])^2 = (1 - 1/n) + 1^2 = 2 - 1/n = O(1).
+ *   By linearity of expectation over the sum:
+ *       E[T(n)] = O(n) + SUM_{i=0}^{n-1} O(E[n_i^2])
+ *               = O(n) + n * O(1)
+ *               = O(n)   =>  expected Theta(n + k)   (k = bucket count ~ n)
+ *
+ *   WORST case (adversarial / skewed: all n items collide in ONE bucket): that single
+ *   bucket's std::stable_sort costs O(n log n), dominating the O(n) scatter/gather, so
+ *   T(n) = Theta(n log n). (A classic INSERTION-sort bucket variant would instead cost
+ *   SUM_{j=1}^{n-1} j = n(n-1)/2 = Theta(n^2); this code avoids that via an n log n sort.)
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 positive constants):
+ *     f = O(g)      iff  EXISTS c2, n0 :        f <= c2*g   for n >= n0
+ *     f = Omega(g)  iff  EXISTS c1, n0 :  c1*g <= f          for n >= n0
+ *     f = Theta(g)  iff  f = O(g) AND f = Omega(g)
+ *   Bucket sort is DISTRIBUTION-dependent, so the bound depends on the input:
+ *     AVERAGE (uniform):  E[T] = Theta(n + k)   (tight in expectation, k ~ n).
+ *     WORST (one bucket): T    = Theta(n log n) (tight for that adversarial input,
+ *                                                fixed by this code's std::stable_sort).
+ *   Over ALL inputs the running time is therefore O(n log n) (upper bound, from the
+ *   worst case) and Omega(n) (lower bound -- scatter+gather alone must touch every
+ *   element). It is NOT a single Theta over all inputs because best != worst: the extra
+ *   log factor is purely a function of how the values distribute across the buckets.
  *
  * Properties:
  *   Stable?    yes  (as written) -- distribution preserves input order within a
@@ -30,7 +66,8 @@
  * When to use / notes:
  *   - Values known to be uniformly spread over a range (classic for floats in [0,1);
  *     here shown for ints via a min/max range map).
- *   - Degrades to quadratic when the distribution is skewed -- pick the bucket count
+ *   - Degrades to O(n log n) when the distribution is skewed (values collide into few
+ *     buckets and the per-bucket std::stable_sort dominates) -- pick the bucket count
  *     and mapping to match the data.
  *   - Edge cases handled below WITHOUT dividing by zero: empty input returns
  *     immediately; when min == max (empty range, includes the all-equal case) the

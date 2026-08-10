@@ -23,6 +23,49 @@
  *   level touches all n elements exactly once during merging => n * log n. The
  *   bound is data-independent, so best == average == worst.
  *
+ * Complexity derivation (recurrence -> recursion tree -> summation):
+ *   Let T(n) be the number of basic operations to sort n elements.
+ *     - Splitting the range in half is O(1).
+ *     - Two recursive calls each sort n/2 elements  -> 2 * T(n/2).
+ *     - Merging the two sorted halves scans every element once -> c*n ops.
+ *   This gives the recurrence:
+ *
+ *       T(n) = 2 * T(n/2) + c*n ,      T(1) = c0        (base case)
+ *
+ *   Unfold it as a recursion tree and count the MERGE work per level:
+ *
+ *       level d      #nodes      size each        work on the level
+ *       ---------    --------    -------------    --------------------------
+ *       d = 0        1           n                c*n
+ *       d = 1        2           n/2              2 * c*(n/2)   = c*n
+ *       d = 2        4           n/4              4 * c*(n/4)   = c*n
+ *       ...          ...         ...              ...
+ *       d = k        2^k         n/2^k            2^k * c*(n/2^k) = c*n
+ *
+ *   Every level costs exactly c*n. The tree height is the number of halvings of
+ *   n down to 1, i.e. k = log2(n), so there are (log2 n + 1) levels. Summing:
+ *
+ *       T(n) = SUM_{d=0}^{log2 n} (c * n)
+ *            = c*n * (log2 n + 1)
+ *            = O(n log n)
+ *
+ *   Master Theorem check (a=2, b=2, f(n)=c*n): n^(log_b a) = n^(log2 2) = n^1 = n,
+ *   which is the same order as f(n) -> case 2 -> T(n) = O(n^(log_b a) * log n)
+ *   = O(n log n). No data-dependent branch exists, so best = average = worst.
+ *
+ * Asymptotic bounds  O (upper) / Omega (lower) / Theta (tight):
+ *   Formal definitions (c1, c2, n0 are positive constants):
+ *     f(n) = O(g(n))      iff  EXISTS c2, n0 :        f(n) <= c2*g(n)   for n >= n0
+ *     f(n) = Omega(g(n))  iff  EXISTS c1, n0 :  c1*g(n) <= f(n)         for n >= n0
+ *     f(n) = Theta(g(n))  iff  f = O(g) AND f = Omega(g)  (squeezed both sides):
+ *                              c1*g(n) <= f(n) <= c2*g(n) for n >= n0
+ *   Here the exact count is f(n) = c*n*(log2 n + 1). Take g(n) = n log n:
+ *     upper  O:     f(n) <= 2c * (n log2 n)  for n >= 2   => T(n) = O(n log n)
+ *     lower  Omega: f(n) >=  c * (n log2 n)  for n >= 2   => T(n) = Omega(n log n)
+ *     tight  Theta: both hold (c1 = c, c2 = 2c)           => T(n) = Theta(n log n)
+ *   Because the work is input-independent, the SAME Theta(n log n) is the tight
+ *   bound for best, average AND worst case.
+ *
  * Properties:
  *   - Stable?    yes  (ties in merge() break toward the LEFT half).
  *   - In-place?  no   (needs an O(n) auxiliary buffer).
