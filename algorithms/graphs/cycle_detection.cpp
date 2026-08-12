@@ -179,11 +179,13 @@ int main() {
         assert(hasCycleDirected(g) == true);
     }
     // Negative: a DAG.  0 -> 1 -> 3, 0 -> 2 -> 3  (diamond, no back edge)
-    //      0
-    //     / \
-    //    1   2
-    //     \ /
-    //      3
+    /*
+     *      0
+     *     / \
+     *    1   2
+     *     \ /
+     *      3
+     */
     // Note edge 1->3 and 2->3 reach the same vertex but via forward/cross
     // edges into a FINISHED subtree, not a back edge -> not a cycle.
     {

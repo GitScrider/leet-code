@@ -176,17 +176,18 @@ MstResult kruskalMst(std::size_t vertexCount, std::vector<Edge> edges) {
 
 int main() {
     // Graph A (connected, 5 vertices). Weights on each undirected edge.
-    //
-    //         1
-    //     (0)---(1)
-    //      | \    |
-    //     4|  3\  |2
-    //      |    \ |
-    //     (3)---(2)
-    //      |  5   \
-    //     6|       \7
-    //      |        \
-    //     (4)--------+
+    /*
+     *         1
+     *     (0)---(1)
+     *      | \    |
+     *     4|  3\  |2
+     *      |    \ |
+     *     (3)---(2)
+     *      |  5   \
+     *     6|       \7
+     *      |        \
+     *     (4)--------+
+     */
     //   (edge 2-4 has weight 7, edge 3-4 has weight 6)
     //
     // Edges: 0-1:1, 0-2:3, 0-3:4, 1-2:2, 2-3:5, 3-4:6, 2-4:7

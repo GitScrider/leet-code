@@ -276,11 +276,13 @@ int main() {
     assert(single.empty());
 
     // ---- Build a tree and verify the ordering invariant ---------------
-    //                50
-    //              /    \
-    //            30      70
-    //           /  \    /  \
-    //         20   40  60   80
+    /*
+     *                50
+     *              /    \
+     *            30      70
+     *           /  \    /  \
+     *         20   40  60   80
+     */
     BinarySearchTree<int> t;
     for (int k : {50, 30, 70, 20, 40, 60, 80})
         assert(t.insert(k));

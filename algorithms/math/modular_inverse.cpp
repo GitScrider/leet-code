@@ -141,7 +141,9 @@ int main() {
 
     // ---- Large prime modulus (< 2^31, so 64-bit products stay safe) ----------
     const std::int64_t P = 1000000007;   // 1e9+7, a prime < 2^31
-    for (const std::int64_t a : {2, 3, 123456, 999999999, P - 1}) {
+    for (const std::int64_t a : {std::int64_t(2), std::int64_t(3),
+                                 std::int64_t(123456), std::int64_t(999999999),
+                                 P - 1}) {
         const std::int64_t inv = inverse_fermat(a, P);
         assert((inv * a) % P == 1);
         std::int64_t inv2;

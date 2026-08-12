@@ -136,12 +136,13 @@ int main() {
     // Graph 1: directed, all positive weights, NO negative cycle. Vertices 0..3.
     // Chosen so that many shortest paths are INDIRECT (a multi-hop route beats
     // the direct edge), which exercises the DP rather than just reading edges.
-    //
-    //            0
-    //          /   \
-    //      (3)/      \(7)
-    //        v        v
-    //        1 --(2)--> 2 --(1)--> 3 --(2)--> 0   (back edges close the cycles)
+    /*
+     *            0
+     *          /   \
+     *      (3)/      \(7)
+     *        v        v
+     *        1 --(2)--> 2 --(1)--> 3 --(2)--> 0   (back edges close the cycles)
+     */
     //        ^          |
     //        |          |
     //        +--(8)-----+  (1->0 = 8, 2->0 = 5)

@@ -228,7 +228,7 @@ int main() {
     // --- Prefix sharing + autocomplete-style queries ---
     {
         Trie t;
-        for (const std::string& w :
+        for (const std::string w :
              {"app", "apple", "apply", "apt", "bat", "batch"}) {
             t.insert(w);
         }
@@ -299,7 +299,7 @@ int main() {
     std::cout << "Trie (prefix tree) demo\n";
     std::cout << "-----------------------\n";
     Trie dict;
-    for (const std::string& w :
+    for (const std::string w :
          {"code", "coder", "coding", "cola", "cost", "dog"}) {
         dict.insert(w);
     }

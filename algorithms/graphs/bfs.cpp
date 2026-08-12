@@ -143,13 +143,13 @@ void addUndirectedEdge(Graph& adj, int u, int v) {
 
 int main() {
     // Known graph (undirected). Vertex 6 is isolated (disconnected).
-    //
-    //        0
-    //       / \
-    //      1   2
-    //     / \   \
-    //    3   4   5        6  (isolated)
-    //
+    /*
+     *        0
+     *       / \
+     *      1   2
+     *     / \   \
+     *    3   4   5        6  (isolated)
+     */
     // Adjacency built in a fixed order so BFS visit order is deterministic.
     Graph adj(7);
     addUndirectedEdge(adj, 0, 1);

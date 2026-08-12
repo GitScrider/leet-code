@@ -417,7 +417,7 @@ int main() {
     std::cout << "Circular Linked List demo\n";
     std::cout << "-------------------------\n";
     CircularLinkedList<std::string> players;
-    for (const std::string& p : {"Ann", "Bob", "Cid", "Dan"})
+    for (const std::string p : {"Ann", "Bob", "Cid", "Dan"})
         players.push_back(p);
 
     std::cout << "Players in the ring: ";

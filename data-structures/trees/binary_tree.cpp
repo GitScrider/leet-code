@@ -245,13 +245,15 @@ int main() {
     assert((single.levelOrder() == std::vector<int>{42}));
 
     // ---- Build a KNOWN fixed tree by hand ------------------------------
-    //            1
-    //          /   \
-    //         2     3
-    //        / \     \
-    //       4   5     6
-    //          /
-    //         7
+    /*
+     *            1
+     *          /   \
+     *         2     3
+     *        / \     \
+     *       4   5     6
+     *          /
+     *         7
+     */
     BinaryTree<int> t;
     auto n1 = t.setRoot(1);
     auto n2 = t.addLeft(n1, 2);
