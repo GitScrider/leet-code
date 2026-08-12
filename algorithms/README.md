@@ -1,9 +1,16 @@
-# Algorithms in C++
+<sub>[🧠 Root](../README.md) · [🎨 Design Patterns](../design-patterns/README.md) · [🧱 Data Structures](../data-structures/README.md) · **⚙️ Algorithms**</sub>
+
+# ⚙️ Algorithms in C++
+
+![Algorithms](https://img.shields.io/badge/algorithms-96-1f6feb?style=flat-square)
+![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat-square&logo=cplusplus&logoColor=white)
+![Build](https://img.shields.io/badge/build-passing-2ea043?style=flat-square)
 
 Classic algorithms implemented in **C++17** for study and reference. Each file is
 self-contained, commented in **English**, opens with a header doc-comment (idea +
-complexity table + properties), and ends with a `main()` that runs **`assert`-based
-tests** (edge cases included) plus a short demo.
+complexity table + properties), a **step-by-step complexity derivation** (instruction-count
+summations / recurrences + formal **O / Ω / Θ** bounds), and ends with a `main()` that runs
+**`assert`-based tests** (edge cases included) plus a short demo.
 
 ## Build & run
 

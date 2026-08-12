@@ -1,4 +1,10 @@
-# Data Structures in C++
+<sub>[🧠 Root](../README.md) · [🎨 Design Patterns](../design-patterns/README.md) · **🧱 Data Structures** · [⚙️ Algorithms](../algorithms/README.md)</sub>
+
+# 🧱 Data Structures in C++
+
+![Structures](https://img.shields.io/badge/structures-21-1f6feb?style=flat-square)
+![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat-square&logo=cplusplus&logoColor=white)
+![Build](https://img.shields.io/badge/build-passing-2ea043?style=flat-square)
 
 From-scratch, generic (`template<typename T>`) implementations of core data structures in **C++17**,
 built for study and reference. Each structure is implemented *from the ground up* — managing its own

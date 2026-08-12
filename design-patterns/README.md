@@ -1,7 +1,13 @@
-# Design Patterns in C++
+<sub>[🧠 Root](../README.md) · **🎨 Design Patterns** · [🧱 Data Structures](../data-structures/README.md) · [⚙️ Algorithms](../algorithms/README.md)</sub>
 
-A study & reference collection of the **23 Gang of Four (GoF) design patterns** (the 22 catalogued
-by [refactoring.guru](https://refactoring.guru/design-patterns)), implemented in modern **C++17**.
+# 🎨 Design Patterns in C++
+
+![Patterns](https://img.shields.io/badge/patterns-22-1f6feb?style=flat-square)
+![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat-square&logo=cplusplus&logoColor=white)
+![Build](https://img.shields.io/badge/build-passing-2ea043?style=flat-square)
+
+A study & reference collection of the **22 Gang of Four (GoF) design patterns**
+(as catalogued by [refactoring.guru](https://refactoring.guru/design-patterns)), implemented in modern **C++17**.
 
 Each pattern lives in a single, self-contained `.cpp` file that:
 
